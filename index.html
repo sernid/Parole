@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Parole">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#eef1f4">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<title>Parole di Reparto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+
+/* Layout: one centered column — study card on top, tools below; wire-colour chips mark each category (IEC conductor colours). */
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --ink:#1b2430; --muted:#5d6876; --line:#d3d9e0;
+  --copper:#b0602a; --copper-soft:#f6e6da;
+  --w-brown:#7a4a2a; --w-black:#22262b; --w-grey:#8a929b; --w-blue:#2f6db5; --w-yellow:#e2c21b; --w-green:#2f8f4e;
+  --ok:#2f7d4a; --warn:#b4541f;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171d; --surface:#1b222b; --ink:#e7ebf0; --muted:#9aa5b2; --line:#2c3642;
+  --copper:#e08a4e; --copper-soft:#3a2a1f; --w-black:#c9ced4; --w-brown:#b7794b; --w-blue:#5b98e0; --ok:#5fbf80; --warn:#e9895a;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171d; --surface:#1b222b; --ink:#e7ebf0; --muted:#9aa5b2; --line:#2c3642;
+  --copper:#e08a4e; --copper-soft:#3a2a1f; --w-black:#c9ced4; --w-brown:#b7794b; --w-blue:#5b98e0; --ok:#5fbf80; --warn:#e9895a;
+  color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(1.9rem,5vw,2.6rem);line-height:1.05;margin:0;text-wrap:balance;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:6px 0 0}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line)}
+.tab{font:600 .95rem var(--f-body);background:none;border:0;color:var(--muted);padding:10px 14px;border-bottom:3px solid transparent;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--ink);border-color:var(--copper)}
+button,select,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600}
+.btn:hover{border-color:var(--copper)}
+.btn.primary{background:var(--copper);border-color:var(--copper);color:#fff}
+.btn.ok{color:var(--ok)} .btn.warn{color:var(--warn)}
+.btn.danger{color:var(--warn)}
+select,input,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+label.chk{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:.92rem}
+.wire{display:inline-block;width:22px;height:8px;border-radius:4px;flex:none;vertical-align:middle}
+.w-lab{background:var(--w-brown)} .w-mat{background:var(--w-black)} .w-qual{background:var(--w-grey)} .w-off{background:var(--w-blue)}
+.w-life{background:repeating-linear-gradient(90deg,var(--w-green) 0 5px,var(--w-yellow) 5px 10px)}
+/* card */
+.card{perspective:1400px;cursor:pointer;user-select:none}
+.card-inner{position:relative;min-height:260px;transition:transform .45s ease;transform-style:preserve-3d}
+.card.flipped .card-inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;background:var(--surface);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;padding:22px 22px 0;overflow:hidden}
+.face.back{transform:rotateY(180deg)}
+.face .top{display:flex;justify-content:space-between;align-items:center;font:600 .72rem var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.term{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;text-align:center;padding:12px 0}
+.term .w{font-family:var(--f-display);font-weight:800;font-size:clamp(1.7rem,6vw,2.4rem);line-height:1.1;text-wrap:balance;overflow-wrap:anywhere}
+.term .ex{color:var(--muted);font-style:italic;max-width:52ch;margin:0 auto}
+.jacket{margin:0 -22px;padding:7px 22px;background:var(--copper-soft);font:400 .7rem var(--f-mono);letter-spacing:.12em;color:var(--copper);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{display:flex;justify-content:space-between;color:var(--muted);font:400 .85rem var(--f-mono);font-variant-numeric:tabular-nums}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:28px;text-align:center;color:var(--muted)}
+/* manage */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.panel h2{font:700 1.05rem var(--f-display);margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid2 > *{min-width:0}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.list{display:flex;flex-direction:column}
+.item{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.item > div{min-width:0}
+.item .it{font-weight:700;overflow-wrap:anywhere} .item .en{color:var(--muted);overflow-wrap:anywhere}
+.item .known{font:600 .7rem var(--f-mono);color:var(--ok);letter-spacing:.06em}
+.small{font-size:.85rem;color:var(--muted)}
+.status{font-size:.85rem;color:var(--muted);min-height:1.2em}
+textarea{width:100%;min-height:110px;font-family:var(--f-mono);font-size:.85rem;box-sizing:border-box}
+@media (prefers-reduced-motion:reduce){.card-inner{transition:none}}
+</style>
+
+</head><body>
+<div class="wrap">
+  <header>
+    <h1>Parole di Reparto</h1>
+    <p class="sub">Italian you hear every day on the lab floor and in the office. Tap a card to flip it.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" id="tab-study" role="tab" aria-selected="true">Study</button>
+    <button class="tab" id="tab-manage" role="tab" aria-selected="false">Edit cards</button>
+  </div>
+
+  <section id="study" class="row" style="flex-direction:column;align-items:stretch;gap:14px">
+    <div class="row">
+      <select id="f-cat" aria-label="Category"></select>
+      <select id="f-dir" aria-label="Direction">
+        <option value="it">Italiano → English</option>
+        <option value="en">English → Italiano</option>
+      </select>
+      <label class="chk"><input type="checkbox" id="f-review"> Only cards to review</label>
+      <button class="btn" id="b-shuffle">Shuffle</button>
+    </div>
+    <div id="cardbox"></div>
+    <div class="row" id="controls" style="justify-content:space-between">
+      <button class="btn" id="b-prev">← Back</button>
+      <div class="row">
+        <button class="btn warn" id="b-again">Ripasso</button>
+        <button class="btn ok" id="b-known">Lo so ✓</button>
+      </div>
+      <button class="btn" id="b-next">Next →</button>
+    </div>
+    <div class="meta"><span id="m-pos"></span><span id="m-known"></span></div>
+  </section>
+
+  <section id="manage" hidden style="display:flex;flex-direction:column;gap:16px">
+    <div class="panel">
+      <h2 id="form-title">Add a card</h2>
+      <div class="grid2">
+        <input id="in-it" placeholder="Italiano (e.g. il provino)">
+        <input id="in-en" placeholder="English (e.g. test specimen)">
+      </div>
+      <input id="in-ex" placeholder="Example sentence you heard (optional)">
+      <div class="row">
+        <select id="in-cat" aria-label="Category for card"></select>
+        <button class="btn primary" id="b-save">Add card</button>
+        <button class="btn" id="b-cancel" hidden>Cancel</button>
+      </div>
+      <div class="status" id="s-form"></div>
+    </div>
+
+    <details class="panel">
+      <summary style="cursor:pointer;font-weight:700">Paste many at once</summary>
+      <p class="small" style="margin:0">One card per line: <code>italiano | english | category | example</code>. Category and example are optional. Categories: lab, materials, quality, office, life.</p>
+      <textarea id="in-bulk" placeholder="la cappa | fume hood | lab&#10;fare il punto | to catch up on status | office | Facciamo il punto venerdì."></textarea>
+      <div class="row"><button class="btn primary" id="b-bulk">Add these cards</button><span class="status" id="s-bulk"></span></div>
+    </details>
+
+    <details class="panel">
+      <summary style="cursor:pointer;font-weight:700">Backup and move to another phone</summary>
+      <p class="small" style="margin:0">Your cards live in this browser only. Copy them out now and then; to restore, paste the text into “Paste many at once”.</p>
+      <div class="row"><button class="btn primary" id="b-export">Copy all cards</button><button class="btn danger" id="b-reset">Delete all cards</button></div>
+      <textarea id="out-backup" hidden readonly aria-label="Backup text"></textarea>
+      <div class="status" id="s-backup"></div>
+    </details>
+
+    <div class="panel">
+      <div class="row" style="justify-content:space-between"><h2>All cards</h2><input id="in-search" placeholder="Search" style="width:12rem"></div>
+      <div class="list" id="list"></div>
+    </div>
+  </section>
+  <div class="status" id="s-global"></div>
+</div>
+
+<script>
+const CATS = {
+  lab:{name:"Prove & laboratorio", wire:"w-lab", mark:"BROWN"},
+  materials:{name:"Cavi & materiali", wire:"w-mat", mark:"BLACK"},
+  quality:{name:"Produzione & qualità", wire:"w-qual", mark:"GREY"},
+  office:{name:"Ufficio & email", wire:"w-off", mark:"BLUE"},
+  life:{name:"Vita in azienda", wire:"w-life", mark:"G/Y"}
+};
+const $ = id => document.getElementById(id);
+let cards = [], order = [], pos = 0, flipped = false, db = null, col = null, editing = null, loaded = false;
+
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function catOpts(withAll){
+  return (withAll?'<option value="all">All categories</option>':'') +
+    Object.entries(CATS).map(([k,c])=>`<option value="${k}">${c.name}</option>`).join("");
+}
+$("f-cat").innerHTML = catOpts(true); $("in-cat").innerHTML = catOpts(false);
+
+function filtered(){
+  const cat=$("f-cat").value, rev=$("f-review").checked;
+  return cards.filter(c=>(cat==="all"||c.category===cat)&&(!rev||!c.known));
+}
+function rebuild(shuffle){
+  const ids = filtered().map(c=>c.id);
+  if(shuffle){ for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]]} order=ids; pos=0; }
+  else { const cur=order[pos]; order = order.filter(id=>ids.includes(id)); ids.forEach(id=>{if(!order.includes(id))order.push(id)}); const p=order.indexOf(cur); pos = p>=0?p:Math.min(pos,Math.max(order.length-1,0)); }
+  renderStudy();
+}
+function renderStudy(){
+  const box=$("cardbox"), total=order.length;
+  $("controls").hidden = total===0;
+  if(!loaded){ box.innerHTML='<div class="empty">Loading your cards…</div>'; $("m-pos").textContent=""; $("m-known").textContent=""; return; }
+  if(!total){
+    box.innerHTML = cards.length
+      ? '<div class="empty">No cards match this filter. Untick “Only cards to review” or pick another category.</div>'
+      : '<div class="empty">No cards yet. Open <b>Edit cards</b> to add the first word you heard today.</div>';
+    $("m-pos").textContent=""; $("m-known").textContent=""; return;
+  }
+  const c = cards.find(x=>x.id===order[pos]); if(!c) return;
+  const cat = CATS[c.category]||CATS.life, itFirst = $("f-dir").value==="it";
+  const front = itFirst ? c.it : c.en, back = itFirst ? c.en : c.it;
+  const jacket = `CAVICEL · ${cat.mark} · ${c.it.toUpperCase()} · `.repeat(4);
+  box.innerHTML = `<div class="card${flipped?" flipped":""}" id="card" tabindex="0" role="button" aria-label="Flip card">
+    <div class="card-inner">
+      <div class="face"><div class="top"><span><span class="wire ${cat.wire}"></span> ${cat.name}</span><span>${itFirst?"IT":"EN"}</span></div>
+        <div class="term"><div class="w">${esc(front)}</div></div><div class="jacket">${esc(jacket)}</div></div>
+      <div class="face back"><div class="top"><span><span class="wire ${cat.wire}"></span> ${cat.name}</span><span>${itFirst?"EN":"IT"}</span></div>
+        <div class="term"><div class="w">${esc(back)}</div>${c.example?`<div class="ex">“${esc(c.example)}”</div>`:""}</div><div class="jacket">${esc(jacket)}</div></div>
+    </div></div>`;
+  const el=$("card"); const flip=()=>{flipped=!flipped; el.classList.toggle("flipped",flipped)};
+  el.onclick=flip; el.onkeydown=e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();flip()}};
+  $("m-pos").textContent = `${pos+1} / ${total}`;
+  $("m-known").textContent = `${cards.filter(x=>x.known).length} of ${cards.length} known`;
+}
+function step(d){ if(!order.length)return; pos=(pos+d+order.length)%order.length; flipped=false; renderStudy(); }
+$("b-next").onclick=()=>step(1); $("b-prev").onclick=()=>step(-1);
+$("b-shuffle").onclick=()=>{flipped=false;rebuild(true)};
+["f-cat","f-review"].forEach(id=>$(id).onchange=()=>{flipped=false;rebuild(false)});
+$("f-dir").onchange=()=>{flipped=false;renderStudy()};
+document.addEventListener("keydown",e=>{ if($("study").hidden||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return; if(e.key==="ArrowRight")step(1); if(e.key==="ArrowLeft")step(-1); });
+
+async function mark(known){
+  const id=order[pos]; if(!id)return;
+  const c=cards.find(x=>x.id===id); if(c) c.known=known;
+  const reviewOnly=$("f-review").checked;
+  if(reviewOnly&&known){ order.splice(pos,1); if(pos>=order.length)pos=0; flipped=false; renderStudy(); } else step(1);
+  if(col){ try{ await col.doc(id).update({known}); }catch(e){ $("s-global").textContent="Couldn't save that. Check your connection and try again."; } }
+}
+$("b-known").onclick=()=>mark(true); $("b-again").onclick=()=>mark(false);
+
+/* tabs */
+function showTab(t){ $("study").hidden=t!=="study"; $("manage").hidden=t!=="manage";
+  $("tab-study").setAttribute("aria-selected",t==="study"); $("tab-manage").setAttribute("aria-selected",t==="manage"); if(t==="manage")renderList(); }
+$("tab-study").onclick=()=>showTab("study"); $("tab-manage").onclick=()=>showTab("manage");
+
+/* manage */
+function renderList(){
+  const q=$("in-search").value.trim().toLowerCase();
+  const rows=cards.filter(c=>!q||(c.it+" "+c.en+" "+(c.example||"")).toLowerCase().includes(q))
+    .sort((a,b)=>a.it.localeCompare(b.it,"it"));
+  $("list").innerHTML = rows.length ? rows.map(c=>{const cat=CATS[c.category]||CATS.life; return `<div class="item">
+    <span class="wire ${cat.wire}" title="${cat.name}"></span>
+    <div><div class="it">${esc(c.it)} ${c.known?'<span class="known">KNOWN</span>':""}</div><div class="en">${esc(c.en)}</div></div>
+    <div class="row"><button class="btn" data-edit="${c.id}">Edit</button><button class="btn danger" data-del="${c.id}">Delete</button></div></div>`}).join("")
+    : `<p class="small">${cards.length?"No cards match your search.":"No cards yet."}</p>`;
+}
+$("in-search").oninput=renderList;
+$("list").onclick=async e=>{
+  const ed=e.target.dataset.edit, del=e.target.dataset.del;
+  if(ed){ const c=cards.find(x=>x.id===ed); editing=ed; $("in-it").value=c.it; $("in-en").value=c.en; $("in-ex").value=c.example||""; $("in-cat").value=c.category;
+    $("form-title").textContent="Edit card"; $("b-save").textContent="Save changes"; $("b-cancel").hidden=false; $("in-it").focus(); window.scrollTo({top:0,behavior:"smooth"}); }
+  if(del){
+    if(e.target.dataset.confirm!=="1"){ e.target.dataset.confirm="1"; e.target.textContent="Confirm delete"; return; }
+    try{ await col.doc(del).delete(); }catch(err){ $("s-global").textContent="Couldn't delete that card. Try again."; }
+  }
+};
+function resetForm(){ editing=null; ["in-it","in-en","in-ex"].forEach(i=>$(i).value=""); $("form-title").textContent="Add a card"; $("b-save").textContent="Add card"; $("b-cancel").hidden=true; }
+$("b-cancel").onclick=resetForm;
+$("b-save").onclick=async()=>{
+  const it=$("in-it").value.trim(), en=$("in-en").value.trim();
+  if(!it||!en){ $("s-form").textContent="Fill in both the Italian and the English."; return; }
+  
+  const body={it,en,example:$("in-ex").value.trim(),category:$("in-cat").value};
+  try{
+    if(editing){ await col.doc(editing).update(body); $("s-form").textContent="Saved."; }
+    else { await col.doc().set({...body,known:false,created:Date.now()}); $("s-form").textContent=`Added “${it}”.`; }
+    resetForm();
+  }catch(e){ $("s-form").textContent = e&&e.code==="quota_exceeded" ? "Couldn't save." : "Couldn't save. Check your connection and try again."; }
+};
+$("b-bulk").onclick=async()=>{
+  
+  const lines=$("in-bulk").value.split("\n").map(l=>l.trim()).filter(Boolean); let n=0, bad=0;
+  for(const l of lines){ const [it,en,cat,ex]=l.split("|").map(s=>(s||"").trim());
+    if(!it||!en){bad++;continue}
+    const category = CATS[(cat||"").toLowerCase()] ? cat.toLowerCase() : "life";
+    try{ await col.doc().set({it,en,category,example:ex||"",known:false,created:Date.now()}); n++; }catch(e){bad++} }
+  $("s-bulk").textContent=`Added ${n} card${n===1?"":"s"}${bad?`, skipped ${bad} line${bad===1?"":"s"}`:""}.`; if(n) $("in-bulk").value="";
+};
+
+/* data — stored in this browser on this phone */
+const KEY="parole-di-reparto-v1";
+const STARTER=[{"id": "s01", "it": "il provino", "en": "test specimen", "category": "lab", "example": "Prepariamo i provini per la prova di domani.", "known": false}, {"id": "s02", "it": "la prova di reazione al fuoco", "en": "reaction-to-fire test", "category": "lab", "example": "", "known": false}, {"id": "s03", "it": "la resistenza al fuoco", "en": "fire resistance", "category": "lab", "example": "", "known": false}, {"id": "s04", "it": "il rilascio di calore", "en": "heat release", "category": "lab", "example": "", "known": false}, {"id": "s05", "it": "la propagazione della fiamma", "en": "flame spread", "category": "lab", "example": "", "known": false}, {"id": "s06", "it": "l'opacità dei fumi", "en": "smoke opacity", "category": "lab", "example": "", "known": false}, {"id": "s07", "it": "il gocciolamento", "en": "dripping (flaming droplets)", "category": "lab", "example": "", "known": false}, {"id": "s08", "it": "la taratura", "en": "calibration", "category": "lab", "example": "Lo strumento è in taratura fino a lunedì.", "known": false}, {"id": "s09", "it": "il banco prova", "en": "test bench / test rig", "category": "lab", "example": "", "known": false}, {"id": "s10", "it": "la cappa", "en": "fume hood", "category": "lab", "example": "", "known": false}, {"id": "s11", "it": "il campione", "en": "sample", "category": "lab", "example": "", "known": false}, {"id": "s12", "it": "la guaina", "en": "sheath / outer jacket", "category": "materials", "example": "", "known": false}, {"id": "s13", "it": "l'isolante", "en": "insulation (material)", "category": "materials", "example": "", "known": false}, {"id": "s14", "it": "il conduttore", "en": "conductor", "category": "materials", "example": "", "known": false}, {"id": "s15", "it": "la sezione", "en": "cross-section (of a conductor)", "category": "materials", "example": "Che sezione ha questo cavo?", "known": false}, {"id": "s16", "it": "la mescola", "en": "compound (rubber/plastic blend)", "category": "materials", "example": "", "known": false}, {"id": "s17", "it": "il rame", "en": "copper", "category": "materials", "example": "", "known": false}, {"id": "s18", "it": "la bobina", "en": "reel / drum", "category": "materials", "example": "", "known": false}, {"id": "s19", "it": "lo spessore", "en": "thickness", "category": "materials", "example": "", "known": false}, {"id": "s20", "it": "il diametro esterno", "en": "outer diameter", "category": "materials", "example": "", "known": false}, {"id": "s21", "it": "la scheda tecnica", "en": "technical datasheet", "category": "materials", "example": "", "known": false}, {"id": "s22", "it": "il lotto", "en": "batch / lot", "category": "quality", "example": "", "known": false}, {"id": "s23", "it": "la non conformità", "en": "nonconformity", "category": "quality", "example": "Apriamo una non conformità sul lotto.", "known": false}, {"id": "s24", "it": "fuori specifica", "en": "out of spec", "category": "quality", "example": "", "known": false}, {"id": "s25", "it": "la tolleranza", "en": "tolerance", "category": "quality", "example": "", "known": false}, {"id": "s26", "it": "il collaudo", "en": "final inspection / acceptance test", "category": "quality", "example": "", "known": false}, {"id": "s27", "it": "l'estrusione", "en": "extrusion", "category": "quality", "example": "", "known": false}, {"id": "s28", "it": "il reparto", "en": "department / production area", "category": "quality", "example": "Passo un attimo in reparto.", "known": false}, {"id": "s29", "it": "il turno", "en": "shift", "category": "quality", "example": "", "known": false}, {"id": "s30", "it": "la commessa", "en": "customer order / job", "category": "quality", "example": "", "known": false}, {"id": "s31", "it": "il fornitore", "en": "supplier", "category": "quality", "example": "", "known": false}, {"id": "s32", "it": "i DPI", "en": "PPE (personal protective equipment)", "category": "quality", "example": "", "known": false}, {"id": "s33", "it": "la riunione", "en": "meeting", "category": "office", "example": "", "known": false}, {"id": "s34", "it": "il verbale", "en": "minutes (of a meeting)", "category": "office", "example": "", "known": false}, {"id": "s35", "it": "in allegato", "en": "attached (to an email)", "category": "office", "example": "In allegato trovi il report.", "known": false}, {"id": "s36", "it": "ti giro la mail", "en": "I'll forward you the email", "category": "office", "example": "", "known": false}, {"id": "s37", "it": "la scadenza", "en": "deadline", "category": "office", "example": "", "known": false}, {"id": "s38", "it": "sollecitare", "en": "to chase up / send a reminder", "category": "office", "example": "Sollecito il fornitore per i certificati.", "known": false}, {"id": "s39", "it": "fare il punto", "en": "to review where things stand", "category": "office", "example": "Facciamo il punto venerdì.", "known": false}, {"id": "s40", "it": "prendere in carico", "en": "to take charge of (a task)", "category": "office", "example": "Lo prendo in carico io.", "known": false}, {"id": "s41", "it": "timbrare", "en": "to clock in / out", "category": "life", "example": "", "known": false}, {"id": "s42", "it": "le ferie", "en": "annual leave / holidays", "category": "life", "example": "", "known": false}, {"id": "s43", "it": "il permesso", "en": "time off (hours)", "category": "life", "example": "Domani prendo due ore di permesso.", "known": false}, {"id": "s44", "it": "la busta paga", "en": "payslip", "category": "life", "example": "", "known": false}, {"id": "s45", "it": "la mensa", "en": "canteen", "category": "life", "example": "", "known": false}, {"id": "s46", "it": "ci penso io", "en": "I'll take care of it", "category": "life", "example": "", "known": false}, {"id": "s47", "it": "mi raccomando", "en": "please make sure / don't forget", "category": "life", "example": "Mi raccomando, segna tutto sul foglio.", "known": false}, {"id": "s48", "it": "un attimo", "en": "just a moment / quickly", "category": "life", "example": "", "known": false}, {"id": "s49", "it": "boh", "en": "no idea / dunno", "category": "life", "example": "", "known": false}, {"id": "s50", "it": "ci sentiamo", "en": "talk soon / we'll be in touch", "category": "life", "example": "", "known": false}];
+function saveLocal(){ try{ localStorage.setItem(KEY,JSON.stringify(cards)); $("s-global").textContent=""; }catch(e){ $("s-global").textContent="This browser isn't saving changes. Use Backup below to keep a copy."; } }
+function refresh(){ rebuild(false); if(!$("manage").hidden) renderList(); saveLocal(); }
+col = {
+  doc(id){ id = id || ("c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+    return {
+      async set(body){ const i=cards.findIndex(c=>c.id===id); const c={id,...body}; if(i>=0)cards[i]=c; else cards.push(c); refresh(); },
+      async update(body){ const c=cards.find(c=>c.id===id); if(c)Object.assign(c,body); refresh(); },
+      async delete(){ cards=cards.filter(c=>c.id!==id); refresh(); }
+    }; }
+};
+try{ const s=localStorage.getItem(KEY); cards = s ? JSON.parse(s) : STARTER.map(c=>({...c})); }catch(e){ cards = STARTER.map(c=>({...c})); }
+loaded=true; rebuild(true);
+
+/* backup */
+$("b-export").onclick=async()=>{
+  const txt=cards.map(c=>[c.it,c.en,c.category,c.example||""].join(" | ")).join("\n");
+  const ta=$("out-backup"); ta.hidden=false; ta.value=txt;
+  try{ await navigator.clipboard.writeText(txt); $("s-backup").textContent="Copied all "+cards.length+" cards. Paste them into a note to keep them safe."; }
+  catch(e){ ta.focus(); ta.select(); $("s-backup").textContent="Select the text and copy it into a note."; }
+};
+$("b-reset").onclick=e=>{
+  if(e.target.dataset.confirm!=="1"){ e.target.dataset.confirm="1"; e.target.textContent="Tap again to delete every card"; return; }
+  cards=[]; e.target.dataset.confirm=""; e.target.textContent="Delete all cards"; refresh();
+};
+
+if("serviceWorker" in navigator && location.protocol==="https:"){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+</script>
+</body></html>
