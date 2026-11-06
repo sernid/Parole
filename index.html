@@ -17,7 +17,7 @@
 :root{
   --bg:#eef1f4; --surface:#ffffff; --ink:#1b2430; --muted:#5d6876; --line:#d3d9e0;
   --copper:#b0602a; --copper-soft:#f6e6da;
-  --w-brown:#7a4a2a; --w-black:#22262b; --w-grey:#8a929b; --w-blue:#2f6db5; --w-yellow:#e2c21b; --w-green:#2f8f4e;
+  --w-brown:#7a4a2a; --w-black:#22262b; --w-grey:#8a929b; --w-blue:#2f6db5; --w-yellow:#e2c21b; --w-green:#2f8f4e; --w-red:#b8322a;
   --ok:#2f7d4a; --ok-soft:#dcefe2; --warn:#b4541f; --warn-soft:#f8e1d4; --hard:#8a6a12;
   --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
   --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
@@ -54,6 +54,7 @@ select,input,textarea{background:var(--surface);border:1px solid var(--line);bor
 .wire{display:inline-block;width:22px;height:8px;border-radius:4px;flex:none;vertical-align:middle}
 .w-lab{background:var(--w-brown)} .w-materials{background:var(--w-black)} .w-quality{background:var(--w-grey)} .w-office{background:var(--w-blue)}
 .w-life{background:repeating-linear-gradient(90deg,var(--w-green) 0 5px,var(--w-yellow) 5px 10px)}
+.w-general{background:var(--w-red)}
 /* card */
 .stage{position:relative}
 .card{perspective:1400px;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:pan-y;transition:transform .25s ease}
@@ -96,6 +97,7 @@ label.btn{display:inline-block}
 .item .it{font-weight:700;overflow-wrap:anywhere}
 .item .en{color:var(--muted);overflow-wrap:anywhere}
 .pill{font:600 .68rem var(--f-mono);letter-spacing:.05em;padding:2px 7px;border-radius:999px;margin-left:6px;white-space:nowrap}
+.pill{color:var(--muted);background:var(--bg)}
 .pill.todo{background:var(--warn-soft);color:var(--warn)}
 .pill.due{background:var(--copper-soft);color:var(--copper)}
 .small{font-size:.85rem;color:var(--muted);margin:0}
@@ -161,6 +163,13 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
     </details>
 
     <details class="panel">
+      <summary>Impostazioni</summary>
+      <label class="small" for="s-new" style="display:flex;justify-content:space-between;align-items:center;gap:12px">New cards per day
+        <select id="s-new"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100000">No limit</option></select></label>
+      <p class="small">Words you've already started don't count; they come back when they're due.</p>
+    </details>
+
+    <details class="panel">
       <summary>Backup and move to another phone</summary>
       <p class="small">Your cards live only on this phone. Save a CSV file now and then (to Files or iCloud). To restore, import it with “Import a CSV file”. Learning progress is not included.</p>
       <div class="row"><button class="btn primary" id="b-csv-out">Save as CSV file</button><button class="btn" id="b-export">Copy as text</button><button class="btn danger" id="b-reset">Delete all cards</button></div>
@@ -178,6 +187,7 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
           <option value="all">All cards</option>
           <option value="todo">Missing translation</option>
           <option value="due">Due today</option>
+          <option value="new">Not studied yet</option>
         </select>
       </div>
       <div id="list"></div>
@@ -212,7 +222,8 @@ const CATS = {
   materials:{name:"Cavi & materiali", mark:"BLACK"},
   quality:{name:"Produzione & qualità", mark:"GREY"},
   office:{name:"Ufficio & email", mark:"BLUE"},
-  life:{name:"Vita in azienda", mark:"G/Y"}
+  life:{name:"Vita in azienda", mark:"G/Y"},
+  general:{name:"Vocabolario generale", mark:"RED"}
 };
 const STARTER = [{"id": "s01", "it": "il provino", "en": "test specimen", "category": "lab", "example": "Prepariamo i provini per la prova di domani."}, {"id": "s02", "it": "la prova di reazione al fuoco", "en": "reaction-to-fire test", "category": "lab", "example": ""}, {"id": "s03", "it": "la resistenza al fuoco", "en": "fire resistance", "category": "lab", "example": ""}, {"id": "s04", "it": "il rilascio di calore", "en": "heat release", "category": "lab", "example": ""}, {"id": "s05", "it": "la propagazione della fiamma", "en": "flame spread", "category": "lab", "example": ""}, {"id": "s06", "it": "l'opacità dei fumi", "en": "smoke opacity", "category": "lab", "example": ""}, {"id": "s07", "it": "il gocciolamento", "en": "dripping (flaming droplets)", "category": "lab", "example": ""}, {"id": "s08", "it": "la taratura", "en": "calibration", "category": "lab", "example": "Lo strumento è in taratura fino a lunedì."}, {"id": "s09", "it": "il banco prova", "en": "test bench / test rig", "category": "lab", "example": ""}, {"id": "s10", "it": "la cappa", "en": "fume hood", "category": "lab", "example": ""}, {"id": "s11", "it": "il campione", "en": "sample", "category": "lab", "example": ""}, {"id": "s12", "it": "la guaina", "en": "sheath / outer jacket", "category": "materials", "example": ""}, {"id": "s13", "it": "l'isolante", "en": "insulation (material)", "category": "materials", "example": ""}, {"id": "s14", "it": "il conduttore", "en": "conductor", "category": "materials", "example": ""}, {"id": "s15", "it": "la sezione", "en": "cross-section (of a conductor)", "category": "materials", "example": "Che sezione ha questo cavo?"}, {"id": "s16", "it": "la mescola", "en": "compound (rubber/plastic blend)", "category": "materials", "example": ""}, {"id": "s17", "it": "il rame", "en": "copper", "category": "materials", "example": ""}, {"id": "s18", "it": "la bobina", "en": "reel / drum", "category": "materials", "example": ""}, {"id": "s19", "it": "lo spessore", "en": "thickness", "category": "materials", "example": ""}, {"id": "s20", "it": "il diametro esterno", "en": "outer diameter", "category": "materials", "example": ""}, {"id": "s21", "it": "la scheda tecnica", "en": "technical datasheet", "category": "materials", "example": ""}, {"id": "s22", "it": "il lotto", "en": "batch / lot", "category": "quality", "example": ""}, {"id": "s23", "it": "la non conformità", "en": "nonconformity", "category": "quality", "example": "Apriamo una non conformità sul lotto."}, {"id": "s24", "it": "fuori specifica", "en": "out of spec", "category": "quality", "example": ""}, {"id": "s25", "it": "la tolleranza", "en": "tolerance", "category": "quality", "example": ""}, {"id": "s26", "it": "il collaudo", "en": "final inspection / acceptance test", "category": "quality", "example": ""}, {"id": "s27", "it": "l'estrusione", "en": "extrusion", "category": "quality", "example": ""}, {"id": "s28", "it": "il reparto", "en": "department / production area", "category": "quality", "example": "Passo un attimo in reparto."}, {"id": "s29", "it": "il turno", "en": "shift", "category": "quality", "example": ""}, {"id": "s30", "it": "la commessa", "en": "customer order / job", "category": "quality", "example": ""}, {"id": "s31", "it": "il fornitore", "en": "supplier", "category": "quality", "example": ""}, {"id": "s32", "it": "i DPI", "en": "PPE (personal protective equipment)", "category": "quality", "example": ""}, {"id": "s33", "it": "la riunione", "en": "meeting", "category": "office", "example": ""}, {"id": "s34", "it": "il verbale", "en": "minutes (of a meeting)", "category": "office", "example": ""}, {"id": "s35", "it": "in allegato", "en": "attached (to an email)", "category": "office", "example": "In allegato trovi il report."}, {"id": "s36", "it": "ti giro la mail", "en": "I'll forward you the email", "category": "office", "example": ""}, {"id": "s37", "it": "la scadenza", "en": "deadline", "category": "office", "example": ""}, {"id": "s38", "it": "sollecitare", "en": "to chase up / send a reminder", "category": "office", "example": "Sollecito il fornitore per i certificati."}, {"id": "s39", "it": "fare il punto", "en": "to review where things stand", "category": "office", "example": "Facciamo il punto venerdì."}, {"id": "s40", "it": "prendere in carico", "en": "to take charge of (a task)", "category": "office", "example": "Lo prendo in carico io."}, {"id": "s41", "it": "timbrare", "en": "to clock in / out", "category": "life", "example": ""}, {"id": "s42", "it": "le ferie", "en": "annual leave / holidays", "category": "life", "example": ""}, {"id": "s43", "it": "il permesso", "en": "time off (hours)", "category": "life", "example": "Domani prendo due ore di permesso."}, {"id": "s44", "it": "la busta paga", "en": "payslip", "category": "life", "example": ""}, {"id": "s45", "it": "la mensa", "en": "canteen", "category": "life", "example": ""}, {"id": "s46", "it": "ci penso io", "en": "I'll take care of it", "category": "life", "example": ""}, {"id": "s47", "it": "mi raccomando", "en": "please make sure / don't forget", "category": "life", "example": "Mi raccomando, segna tutto sul foglio."}, {"id": "s48", "it": "un attimo", "en": "just a moment / quickly", "category": "life", "example": ""}, {"id": "s49", "it": "boh", "en": "no idea / dunno", "category": "life", "example": ""}, {"id": "s50", "it": "ci sentiamo", "en": "talk soon / we'll be in touch", "category": "life", "example": ""}];
 const KEY = "parole-v2", OLD_KEY = "parole-di-reparto-v1", PREFS = "parole-prefs";
@@ -238,7 +249,7 @@ function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(cards)); $("s-global").textContent = ""; }
   catch(e){ $("s-global").textContent = "This phone isn't saving changes. Use Backup to keep a copy."; }
 }
-let prefs = {cat:"all", dir:"it"};
+let prefs = {cat:"all", dir:"it", newPerDay:20};
 try{ Object.assign(prefs, JSON.parse(localStorage.getItem(PREFS) || "{}")); }catch(e){}
 const savePrefs = () => { try{ localStorage.setItem(PREFS, JSON.stringify(prefs)); }catch(e){} };
 
@@ -252,20 +263,33 @@ function nextIvl(c, g){
 }
 function grade(c, g){
   const now = Date.now(), ivl = nextIvl(c, g);
+  if(!c.seen) c.seen = now;
   if(g === "again"){ c.reps = 0; c.lapses++; c.ease = Math.max(1.3, c.ease - 0.2); c.ivl = 0; c.due = now; }
   else { if(g === "hard") c.ease = Math.max(1.3, c.ease - 0.15); c.reps++; c.ivl = ivl; c.due = startOfDay(now) + ivl*DAY; }
 }
 const fmtIvl = d => d === 0 ? "<1 min" : d < 30 ? d + "g" : d < 365 ? Math.round(d/30) + " mesi" : (d/365).toFixed(1) + " anni";
 const studyable = c => c.en.trim() !== "";
 const isDue = c => studyable(c) && c.due <= Date.now();
+const isNew = c => !c.seen && c.reps === 0 && c.lapses === 0;
+// how many never-seen cards may still start today (shared across categories)
+function newLeft(){
+  const t = startOfDay(Date.now()), started = cards.filter(c => c.seen && c.seen >= t).length;
+  return Math.max(0, (Number(prefs.newPerDay) || 20) - started);
+}
+const dueCount = pool => pool.filter(c => isDue(c) && !isNew(c)).length + Math.min(newLeft(), pool.filter(c => isDue(c) && isNew(c)).length);
 
 /* ---------- study session ---------- */
 let queue = [], current = null, flipped = false, extra = false;
 function buildQueue(){
   const pool = cards.filter(c => prefs.cat === "all" || c.category === prefs.cat);
-  const list = extra ? pool.filter(studyable).sort((a,b) => a.due - b.due).slice(0, 20) : pool.filter(isDue);
-  // reviews first (oldest due first), then new cards in the order they were added
-  list.sort((a,b) => (a.reps === 0) - (b.reps === 0) || (a.reps === 0 ? a.created - b.created : a.due - b.due));
+  let list;
+  if(extra) list = pool.filter(studyable).sort((a,b) => a.due - b.due || a.created - b.created).slice(0, 20);
+  else {
+    // reviews first (oldest due first), then today's share of new cards in the order they were added
+    const reviews = pool.filter(c => isDue(c) && !isNew(c)).sort((a,b) => a.due - b.due);
+    const fresh = pool.filter(c => isDue(c) && isNew(c)).sort((a,b) => a.created - b.created).slice(0, newLeft());
+    list = reviews.concat(fresh);
+  }
   queue = list.map(c => c.id);
   nextCard();
 }
@@ -303,7 +327,7 @@ const SPEAK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 
 /* ---------- render: study ---------- */
 function renderToday(){
-  const due = cards.filter(isDue).length, todo = cards.filter(c => !studyable(c)).length;
+  const due = dueCount(cards), todo = cards.filter(c => !studyable(c)).length;
   $("today").innerHTML = `<b>${due}</b> da ripassare` + (todo ? ` · ${todo} senza traduzione` : "");
 }
 function renderStudy(){
@@ -313,10 +337,14 @@ function renderStudy(){
   $("m-total").textContent = `${total} carte`;
   if(!current){
     extra = false;
-    const upcoming = cards.filter(c => studyable(c) && (prefs.cat === "all" || c.category === prefs.cat)).sort((a,b) => a.due - b.due)[0];
+    const pool = cards.filter(c => studyable(c) && (prefs.cat === "all" || c.category === prefs.cat));
+    const waiting = pool.filter(isNew).length;
+    const upcoming = pool.filter(c => !isNew(c)).sort((a,b) => a.due - b.due)[0];
     const when = upcoming ? Math.max(1, Math.round((startOfDay(upcoming.due) - startOfDay(Date.now())) / DAY)) : 0;
+    const msg = waiting ? `You've reached today's limit of new words. ${waiting} new ${waiting === 1 ? "word waits" : "words wait"} for the next days.`
+      : upcoming ? `Next card comes back in ${when} ${when === 1 ? "day" : "days"}.` : "";
     stage.innerHTML = `<div class="done"><h2>Fatto per oggi</h2>
-      <p>${upcoming ? `Next card comes back in ${when} ${when === 1 ? "day" : "days"}.` : "Add some words with the + button."}</p>
+      <p>${pool.length ? msg : "Add some words with the + button."}</p>
       ${upcoming ? '<button class="btn" id="b-extra">Study 20 more anyway</button>' : ""}</div>`;
     act.innerHTML = ""; $("m-left").textContent = "";
     const be = $("b-extra"); if(be) be.onclick = () => { extra = true; buildQueue(); };
@@ -396,6 +424,8 @@ const catOpts = all => (all ? '<option value="all">All categories</option>' : ""
 $("f-cat").innerHTML = catOpts(true); $("a-cat").innerHTML = catOpts(false);
 $("f-cat").value = CATS[prefs.cat] ? prefs.cat : "all"; $("f-dir").value = prefs.dir === "en" ? "en" : "it";
 $("f-cat").onchange = () => { prefs.cat = $("f-cat").value; savePrefs(); extra = false; buildQueue(); };
+$("s-new").value = String(prefs.newPerDay || 20);
+$("s-new").onchange = () => { prefs.newPerDay = Number($("s-new").value); savePrefs(); renderToday(); };
 $("f-dir").onchange = () => { prefs.dir = $("f-dir").value; savePrefs(); flipped = false; renderStudy(); };
 function showTab(t){
   $("study").hidden = t !== "study"; $("cards").hidden = t !== "cards";
@@ -408,11 +438,11 @@ $("tab-study").onclick = () => showTab("study"); $("tab-cards").onclick = () => 
 function renderList(){
   const q = $("in-search").value.trim().toLowerCase(), f = $("l-filter").value;
   const rows = cards.filter(c => (!q || (c.it + " " + c.en + " " + c.example).toLowerCase().includes(q))
-      && (f === "all" || (f === "todo" && !studyable(c)) || (f === "due" && isDue(c))))
+      && (f === "all" || (f === "todo" && !studyable(c)) || (f === "due" && isDue(c) && !isNew(c)) || (f === "new" && isNew(c) && studyable(c))))
     .sort((a,b) => a.it.localeCompare(b.it, "it"));
   $("list").innerHTML = rows.length ? rows.map(c => `<div class="item">
       <span class="wire w-${c.category}" title="${CATS[c.category].name}"></span>
-      <div><div class="it">${esc(c.it)}${!studyable(c) ? '<span class="pill todo">ADD MEANING</span>' : isDue(c) ? '<span class="pill due">OGGI</span>' : ""}</div>
+      <div><div class="it">${esc(c.it)}${!studyable(c) ? '<span class="pill todo">ADD MEANING</span>' : isNew(c) ? '<span class="pill">NUOVA</span>' : isDue(c) ? '<span class="pill due">OGGI</span>' : ""}</div>
       <div class="en">${esc(c.en) || "—"}</div></div>
       <button class="btn" data-edit="${c.id}">Edit</button></div>`).join("")
     : `<p class="small">${cards.length ? "No cards match." : "No cards yet. Tap + to add one."}</p>`;
@@ -458,6 +488,7 @@ function catOf(s){
   if(/^(mat|cav)/.test(v)) return "materials";
   if(/^(qual|prod)/.test(v)) return "quality";
   if(/^(off|uff|mail|email)/.test(v)) return "office";
+  if(/^(gen|a2|b2|base|vocab)/.test(v)) return "general";
   return "life";
 }
 // rows: [{it, en, category, example}] -> adds the new ones, returns counts
