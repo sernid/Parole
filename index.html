@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Parole">
@@ -8,301 +11,570 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>Parole di Reparto</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-html{-webkit-text-size-adjust:100%}
-body{margin:0}
-:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-
-/* Layout: one centered column — study card on top, tools below; wire-colour chips mark each category (IEC conductor colours). */
+/* Layout: one column. Study card on top, grading below, + button floats bottom-right. Wire colours mark categories. */
 :root{
   --bg:#eef1f4; --surface:#ffffff; --ink:#1b2430; --muted:#5d6876; --line:#d3d9e0;
   --copper:#b0602a; --copper-soft:#f6e6da;
   --w-brown:#7a4a2a; --w-black:#22262b; --w-grey:#8a929b; --w-blue:#2f6db5; --w-yellow:#e2c21b; --w-green:#2f8f4e;
-  --ok:#2f7d4a; --warn:#b4541f;
-  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
-  --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --ok:#2f7d4a; --ok-soft:#dcefe2; --warn:#b4541f; --warn-soft:#f8e1d4; --hard:#8a6a12;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#12171d; --surface:#1b222b; --ink:#e7ebf0; --muted:#9aa5b2; --line:#2c3642;
-  --copper:#e08a4e; --copper-soft:#3a2a1f; --w-black:#c9ced4; --w-brown:#b7794b; --w-blue:#5b98e0; --ok:#5fbf80; --warn:#e9895a;
-  color-scheme:dark}}
+  --copper:#e08a4e; --copper-soft:#3a2a1f; --w-black:#c9ced4; --w-brown:#b7794b; --w-blue:#5b98e0;
+  --ok:#5fbf80; --ok-soft:#1d3326; --warn:#e9895a; --warn-soft:#3b2519; --hard:#d9b44a; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#12171d; --surface:#1b222b; --ink:#e7ebf0; --muted:#9aa5b2; --line:#2c3642;
-  --copper:#e08a4e; --copper-soft:#3a2a1f; --w-black:#c9ced4; --w-brown:#b7794b; --w-blue:#5b98e0; --ok:#5fbf80; --warn:#e9895a;
-  color-scheme:dark}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
-.wrap{max-width:760px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
-h1{font-family:var(--f-display);font-weight:800;font-size:clamp(1.9rem,5vw,2.6rem);line-height:1.05;margin:0;text-wrap:balance;letter-spacing:-.01em}
-.sub{color:var(--muted);margin:6px 0 0}
-.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line)}
+  --copper:#e08a4e; --copper-soft:#3a2a1f; --w-black:#c9ced4; --w-brown:#b7794b; --w-blue:#5b98e0;
+  --ok:#5fbf80; --ok-soft:#1d3326; --warn:#e9895a; --warn-soft:#3b2519; --hard:#d9b44a; color-scheme:dark}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:640px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+header > div{min-width:0}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(1.7rem,6vw,2.3rem);line-height:1.05;margin:0;letter-spacing:-.01em}
+.today{font:600 .8rem var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;margin-top:4px}
+.today b{color:var(--copper);font-size:1rem}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
 .tab{font:600 .95rem var(--f-body);background:none;border:0;color:var(--muted);padding:10px 14px;border-bottom:3px solid transparent;cursor:pointer}
 .tab[aria-selected="true"]{color:var(--ink);border-color:var(--copper)}
 button,select,input,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--copper);outline-offset:2px}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600}
-.btn:hover{border-color:var(--copper)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600}
 .btn.primary{background:var(--copper);border-color:var(--copper);color:#fff}
-.btn.ok{color:var(--ok)} .btn.warn{color:var(--warn)}
 .btn.danger{color:var(--warn)}
-select,input,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
-label.chk{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:.92rem}
+select,input,textarea{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-width:0;font-size:16px}
 .wire{display:inline-block;width:22px;height:8px;border-radius:4px;flex:none;vertical-align:middle}
-.w-lab{background:var(--w-brown)} .w-mat{background:var(--w-black)} .w-qual{background:var(--w-grey)} .w-off{background:var(--w-blue)}
+.w-lab{background:var(--w-brown)} .w-materials{background:var(--w-black)} .w-quality{background:var(--w-grey)} .w-office{background:var(--w-blue)}
 .w-life{background:repeating-linear-gradient(90deg,var(--w-green) 0 5px,var(--w-yellow) 5px 10px)}
 /* card */
-.card{perspective:1400px;cursor:pointer;user-select:none}
-.card-inner{position:relative;min-height:260px;transition:transform .45s ease;transform-style:preserve-3d}
+.stage{position:relative}
+.card{perspective:1400px;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:pan-y;transition:transform .25s ease}
+.card.dragging{transition:none}
+.card-inner{position:relative;min-height:280px;transition:transform .45s ease;transform-style:preserve-3d}
 .card.flipped .card-inner{transform:rotateY(180deg)}
-.face{position:absolute;inset:0;backface-visibility:hidden;background:var(--surface);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;padding:22px 22px 0;overflow:hidden}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;padding:18px 18px 0;overflow:hidden}
 .face.back{transform:rotateY(180deg)}
-.face .top{display:flex;justify-content:space-between;align-items:center;font:600 .72rem var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.term{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;text-align:center;padding:12px 0}
-.term .w{font-family:var(--f-display);font-weight:800;font-size:clamp(1.7rem,6vw,2.4rem);line-height:1.1;text-wrap:balance;overflow-wrap:anywhere}
-.term .ex{color:var(--muted);font-style:italic;max-width:52ch;margin:0 auto}
-.jacket{margin:0 -22px;padding:7px 22px;background:var(--copper-soft);font:400 .7rem var(--f-mono);letter-spacing:.12em;color:var(--copper);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meta{display:flex;justify-content:space-between;color:var(--muted);font:400 .85rem var(--f-mono);font-variant-numeric:tabular-nums}
-.empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:28px;text-align:center;color:var(--muted)}
-/* manage */
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.face .top{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 .72rem var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.term{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;text-align:center;padding:10px 0}
+.term .w{font-family:var(--f-display);font-weight:800;font-size:clamp(1.6rem,7vw,2.3rem);line-height:1.1;text-wrap:balance;overflow-wrap:anywhere}
+.term .ex{color:var(--muted);font-style:italic;max-width:46ch}
+.speak{border:1px solid var(--line);background:var(--bg);border-radius:999px;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink)}
+.speak svg{width:20px;height:20px}
+.jacket{margin:0 -18px;padding:7px 18px;background:var(--copper-soft);font:400 .7rem var(--f-mono);letter-spacing:.12em;color:var(--copper);white-space:nowrap;overflow:hidden}
+.stamp{position:absolute;top:16px;font:800 1.1rem var(--f-display);padding:4px 12px;border-radius:8px;border:3px solid;opacity:0;pointer-events:none;z-index:2;transform:rotate(-8deg)}
+.stamp.good{right:16px;color:var(--ok);border-color:var(--ok)}
+.stamp.again{left:16px;color:var(--warn);border-color:var(--warn);transform:rotate(8deg)}
+.grade{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grade .btn{display:flex;flex-direction:column;align-items:center;padding:10px 6px;line-height:1.2}
+.grade small{font:400 .72rem var(--f-mono);color:var(--muted);margin-top:3px}
+.g-again{background:var(--warn-soft);border-color:transparent;color:var(--warn)}
+.g-hard{color:var(--hard)}
+.g-good{background:var(--ok-soft);border-color:transparent;color:var(--ok)}
+.reveal{width:100%;padding:14px}
+.hint{font-size:.82rem;color:var(--muted);text-align:center;margin:0}
+.done{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px 20px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
+.done h2{font:800 1.4rem var(--f-display);margin:0}
+.done p{margin:0;color:var(--muted)}
+.meta{display:flex;justify-content:space-between;color:var(--muted);font:400 .82rem var(--f-mono);font-variant-numeric:tabular-nums}
+/* lists */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
 .panel h2{font:700 1.05rem var(--f-display);margin:0}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.grid2 > *{min-width:0}
-@media (max-width:520px){.grid2{grid-template-columns:1fr}}
-.list{display:flex;flex-direction:column}
+summary{cursor:pointer;font-weight:700}
+details.panel{display:block}
+details.panel > * + *{margin-top:10px}
+label.btn{display:inline-block}
 .item{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
 .item > div{min-width:0}
-.item .it{font-weight:700;overflow-wrap:anywhere} .item .en{color:var(--muted);overflow-wrap:anywhere}
-.item .known{font:600 .7rem var(--f-mono);color:var(--ok);letter-spacing:.06em}
-.small{font-size:.85rem;color:var(--muted)}
+.item .it{font-weight:700;overflow-wrap:anywhere}
+.item .en{color:var(--muted);overflow-wrap:anywhere}
+.pill{font:600 .68rem var(--f-mono);letter-spacing:.05em;padding:2px 7px;border-radius:999px;margin-left:6px;white-space:nowrap}
+.pill.todo{background:var(--warn-soft);color:var(--warn)}
+.pill.due{background:var(--copper-soft);color:var(--copper)}
+.small{font-size:.85rem;color:var(--muted);margin:0}
 .status{font-size:.85rem;color:var(--muted);min-height:1.2em}
 textarea{width:100%;min-height:110px;font-family:var(--f-mono);font-size:.85rem;box-sizing:border-box}
-@media (prefers-reduced-motion:reduce){.card-inner{transition:none}}
+/* quick add */
+.fab{flex:none;width:52px;height:52px;border-radius:50%;border:0;background:var(--copper);color:#fff;font-size:1.9rem;line-height:1;cursor:pointer}
+.filters{display:flex;gap:8px}
+.filters select{flex:1 1 0;min-width:0}
+dialog{border:0;border-radius:18px;padding:0;width:min(560px,calc(100vw - 24px));background:var(--surface);color:var(--ink)}
+dialog::backdrop{background:rgba(10,14,20,.5)}
+.sheet{padding:18px;display:flex;flex-direction:column;gap:10px}
+.sheet h2{font:800 1.25rem var(--f-display);margin:0}
+.sheet input,.sheet select{width:100%;box-sizing:border-box}
+.sheet label{font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+@media (prefers-reduced-motion:reduce){.card,.card-inner{transition:none}}
 </style>
-
-</head><body>
+</head>
+<body>
 <div class="wrap">
   <header>
-    <h1>Parole di Reparto</h1>
-    <p class="sub">Italian you hear every day on the lab floor and in the office. Tap a card to flip it.</p>
+    <div><h1>Parole di Reparto</h1><div class="today" id="today"></div></div>
+    <button class="fab" id="fab" aria-label="Add a word">+</button>
   </header>
 
   <div class="tabs" role="tablist">
-    <button class="tab" id="tab-study" role="tab" aria-selected="true">Study</button>
-    <button class="tab" id="tab-manage" role="tab" aria-selected="false">Edit cards</button>
+    <button class="tab" id="tab-study" role="tab" aria-selected="true">Studia</button>
+    <button class="tab" id="tab-cards" role="tab" aria-selected="false">Le mie carte</button>
   </div>
 
-  <section id="study" class="row" style="flex-direction:column;align-items:stretch;gap:14px">
-    <div class="row">
+  <section id="study" style="display:flex;flex-direction:column;gap:14px">
+    <div class="filters">
       <select id="f-cat" aria-label="Category"></select>
       <select id="f-dir" aria-label="Direction">
-        <option value="it">Italiano → English</option>
-        <option value="en">English → Italiano</option>
+        <option value="it">IT → EN</option>
+        <option value="en">EN → IT</option>
       </select>
-      <label class="chk"><input type="checkbox" id="f-review"> Only cards to review</label>
-      <button class="btn" id="b-shuffle">Shuffle</button>
     </div>
-    <div id="cardbox"></div>
-    <div class="row" id="controls" style="justify-content:space-between">
-      <button class="btn" id="b-prev">← Back</button>
-      <div class="row">
-        <button class="btn warn" id="b-again">Ripasso</button>
-        <button class="btn ok" id="b-known">Lo so ✓</button>
-      </div>
-      <button class="btn" id="b-next">Next →</button>
-    </div>
-    <div class="meta"><span id="m-pos"></span><span id="m-known"></span></div>
+    <div class="stage" id="stage"></div>
+    <div id="actions"></div>
+    <div class="meta"><span id="m-left"></span><span id="m-total"></span></div>
   </section>
 
-  <section id="manage" hidden style="display:flex;flex-direction:column;gap:16px">
-    <div class="panel">
-      <h2 id="form-title">Add a card</h2>
-      <div class="grid2">
-        <input id="in-it" placeholder="Italiano (e.g. il provino)">
-        <input id="in-en" placeholder="English (e.g. test specimen)">
+  <section id="cards" hidden style="display:flex;flex-direction:column;gap:16px">
+    <details class="panel">
+      <summary>Import a CSV file</summary>
+      <p class="small">Columns: <code>italiano, english, category, example</code>. Only the Italian is required. A header row is fine (Italian or English names), and commas, semicolons or tabs all work, so a file saved from Excel, Numbers or Google Sheets opens as it is.</p>
+      <label class="btn primary" for="in-csv" style="align-self:flex-start">Choose CSV file</label>
+      <input type="file" id="in-csv" accept=".csv,.tsv,.txt,text/csv,text/plain" hidden>
+      <div id="csv-preview" hidden style="display:flex;flex-direction:column;gap:8px">
+        <p class="small" id="csv-summary"></p>
+        <div id="csv-rows" style="overflow-x:auto"></div>
+        <div class="row"><button class="btn primary" id="b-csv-go">Import</button><button class="btn" id="b-csv-cancel">Cancel</button></div>
       </div>
-      <input id="in-ex" placeholder="Example sentence you heard (optional)">
-      <div class="row">
-        <select id="in-cat" aria-label="Category for card"></select>
-        <button class="btn primary" id="b-save">Add card</button>
-        <button class="btn" id="b-cancel" hidden>Cancel</button>
-      </div>
-      <div class="status" id="s-form"></div>
-    </div>
+      <div class="status" id="s-csv"></div>
+    </details>
 
     <details class="panel">
-      <summary style="cursor:pointer;font-weight:700">Paste many at once</summary>
-      <p class="small" style="margin:0">One card per line: <code>italiano | english | category | example</code>. Category and example are optional. Categories: lab, materials, quality, office, life.</p>
-      <textarea id="in-bulk" placeholder="la cappa | fume hood | lab&#10;fare il punto | to catch up on status | office | Facciamo il punto venerdì."></textarea>
+      <summary>Paste many at once</summary>
+      <p class="small">One card per line: <code>italiano | english | category | example</code>. Category and example are optional. Categories: lab, materials, quality, office, life.</p>
+      <textarea id="in-bulk" placeholder="la cappa | fume hood | lab&#10;fare il punto | to review where things stand | office | Facciamo il punto venerdì."></textarea>
       <div class="row"><button class="btn primary" id="b-bulk">Add these cards</button><span class="status" id="s-bulk"></span></div>
     </details>
 
     <details class="panel">
-      <summary style="cursor:pointer;font-weight:700">Backup and move to another phone</summary>
-      <p class="small" style="margin:0">Your cards live in this browser only. Copy them out now and then; to restore, paste the text into “Paste many at once”.</p>
-      <div class="row"><button class="btn primary" id="b-export">Copy all cards</button><button class="btn danger" id="b-reset">Delete all cards</button></div>
+      <summary>Backup and move to another phone</summary>
+      <p class="small">Your cards live only on this phone. Save a CSV file now and then (to Files or iCloud). To restore, import it with “Import a CSV file”. Learning progress is not included.</p>
+      <div class="row"><button class="btn primary" id="b-csv-out">Save as CSV file</button><button class="btn" id="b-export">Copy as text</button><button class="btn danger" id="b-reset">Delete all cards</button></div>
       <textarea id="out-backup" hidden readonly aria-label="Backup text"></textarea>
       <div class="status" id="s-backup"></div>
     </details>
 
     <div class="panel">
-      <div class="row" style="justify-content:space-between"><h2>All cards</h2><input id="in-search" placeholder="Search" style="width:12rem"></div>
-      <div class="list" id="list"></div>
+      <div class="row" style="justify-content:space-between">
+        <h2>Tutte le carte</h2>
+        <input id="in-search" placeholder="Cerca" style="width:11rem" aria-label="Search cards">
+      </div>
+      <div class="row">
+        <select id="l-filter" aria-label="Show">
+          <option value="all">All cards</option>
+          <option value="todo">Missing translation</option>
+          <option value="due">Due today</option>
+        </select>
+      </div>
+      <div id="list"></div>
     </div>
   </section>
   <div class="status" id="s-global"></div>
 </div>
 
+
+<dialog id="dlg">
+  <form class="sheet" id="f-add" method="dialog">
+    <h2 id="dlg-title">Nuova parola</h2>
+    <label>Italiano <input id="a-it" autocomplete="off" autocapitalize="off" required placeholder="What you heard"></label>
+    <label>English <input id="a-en" autocomplete="off" placeholder="Leave empty and fill in later"></label>
+    <label>Example sentence <input id="a-ex" autocomplete="off" placeholder="Optional"></label>
+    <label>Category <select id="a-cat"></select></label>
+    <div class="status" id="s-add"></div>
+    <div class="row" style="justify-content:space-between">
+      <button type="button" class="btn danger" id="a-del" hidden>Delete</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn" id="a-cancel">Cancel</button>
+      <button type="submit" class="btn primary" id="a-save">Save</button>
+    </div>
+    <button type="button" class="btn" id="a-more">Save and add another</button>
+  </form>
+</dialog>
+
 <script>
+"use strict";
 const CATS = {
-  lab:{name:"Prove & laboratorio", wire:"w-lab", mark:"BROWN"},
-  materials:{name:"Cavi & materiali", wire:"w-mat", mark:"BLACK"},
-  quality:{name:"Produzione & qualità", wire:"w-qual", mark:"GREY"},
-  office:{name:"Ufficio & email", wire:"w-off", mark:"BLUE"},
-  life:{name:"Vita in azienda", wire:"w-life", mark:"G/Y"}
+  lab:{name:"Prove & laboratorio", mark:"BROWN"},
+  materials:{name:"Cavi & materiali", mark:"BLACK"},
+  quality:{name:"Produzione & qualità", mark:"GREY"},
+  office:{name:"Ufficio & email", mark:"BLUE"},
+  life:{name:"Vita in azienda", mark:"G/Y"}
 };
+const STARTER = [{"id": "s01", "it": "il provino", "en": "test specimen", "category": "lab", "example": "Prepariamo i provini per la prova di domani."}, {"id": "s02", "it": "la prova di reazione al fuoco", "en": "reaction-to-fire test", "category": "lab", "example": ""}, {"id": "s03", "it": "la resistenza al fuoco", "en": "fire resistance", "category": "lab", "example": ""}, {"id": "s04", "it": "il rilascio di calore", "en": "heat release", "category": "lab", "example": ""}, {"id": "s05", "it": "la propagazione della fiamma", "en": "flame spread", "category": "lab", "example": ""}, {"id": "s06", "it": "l'opacità dei fumi", "en": "smoke opacity", "category": "lab", "example": ""}, {"id": "s07", "it": "il gocciolamento", "en": "dripping (flaming droplets)", "category": "lab", "example": ""}, {"id": "s08", "it": "la taratura", "en": "calibration", "category": "lab", "example": "Lo strumento è in taratura fino a lunedì."}, {"id": "s09", "it": "il banco prova", "en": "test bench / test rig", "category": "lab", "example": ""}, {"id": "s10", "it": "la cappa", "en": "fume hood", "category": "lab", "example": ""}, {"id": "s11", "it": "il campione", "en": "sample", "category": "lab", "example": ""}, {"id": "s12", "it": "la guaina", "en": "sheath / outer jacket", "category": "materials", "example": ""}, {"id": "s13", "it": "l'isolante", "en": "insulation (material)", "category": "materials", "example": ""}, {"id": "s14", "it": "il conduttore", "en": "conductor", "category": "materials", "example": ""}, {"id": "s15", "it": "la sezione", "en": "cross-section (of a conductor)", "category": "materials", "example": "Che sezione ha questo cavo?"}, {"id": "s16", "it": "la mescola", "en": "compound (rubber/plastic blend)", "category": "materials", "example": ""}, {"id": "s17", "it": "il rame", "en": "copper", "category": "materials", "example": ""}, {"id": "s18", "it": "la bobina", "en": "reel / drum", "category": "materials", "example": ""}, {"id": "s19", "it": "lo spessore", "en": "thickness", "category": "materials", "example": ""}, {"id": "s20", "it": "il diametro esterno", "en": "outer diameter", "category": "materials", "example": ""}, {"id": "s21", "it": "la scheda tecnica", "en": "technical datasheet", "category": "materials", "example": ""}, {"id": "s22", "it": "il lotto", "en": "batch / lot", "category": "quality", "example": ""}, {"id": "s23", "it": "la non conformità", "en": "nonconformity", "category": "quality", "example": "Apriamo una non conformità sul lotto."}, {"id": "s24", "it": "fuori specifica", "en": "out of spec", "category": "quality", "example": ""}, {"id": "s25", "it": "la tolleranza", "en": "tolerance", "category": "quality", "example": ""}, {"id": "s26", "it": "il collaudo", "en": "final inspection / acceptance test", "category": "quality", "example": ""}, {"id": "s27", "it": "l'estrusione", "en": "extrusion", "category": "quality", "example": ""}, {"id": "s28", "it": "il reparto", "en": "department / production area", "category": "quality", "example": "Passo un attimo in reparto."}, {"id": "s29", "it": "il turno", "en": "shift", "category": "quality", "example": ""}, {"id": "s30", "it": "la commessa", "en": "customer order / job", "category": "quality", "example": ""}, {"id": "s31", "it": "il fornitore", "en": "supplier", "category": "quality", "example": ""}, {"id": "s32", "it": "i DPI", "en": "PPE (personal protective equipment)", "category": "quality", "example": ""}, {"id": "s33", "it": "la riunione", "en": "meeting", "category": "office", "example": ""}, {"id": "s34", "it": "il verbale", "en": "minutes (of a meeting)", "category": "office", "example": ""}, {"id": "s35", "it": "in allegato", "en": "attached (to an email)", "category": "office", "example": "In allegato trovi il report."}, {"id": "s36", "it": "ti giro la mail", "en": "I'll forward you the email", "category": "office", "example": ""}, {"id": "s37", "it": "la scadenza", "en": "deadline", "category": "office", "example": ""}, {"id": "s38", "it": "sollecitare", "en": "to chase up / send a reminder", "category": "office", "example": "Sollecito il fornitore per i certificati."}, {"id": "s39", "it": "fare il punto", "en": "to review where things stand", "category": "office", "example": "Facciamo il punto venerdì."}, {"id": "s40", "it": "prendere in carico", "en": "to take charge of (a task)", "category": "office", "example": "Lo prendo in carico io."}, {"id": "s41", "it": "timbrare", "en": "to clock in / out", "category": "life", "example": ""}, {"id": "s42", "it": "le ferie", "en": "annual leave / holidays", "category": "life", "example": ""}, {"id": "s43", "it": "il permesso", "en": "time off (hours)", "category": "life", "example": "Domani prendo due ore di permesso."}, {"id": "s44", "it": "la busta paga", "en": "payslip", "category": "life", "example": ""}, {"id": "s45", "it": "la mensa", "en": "canteen", "category": "life", "example": ""}, {"id": "s46", "it": "ci penso io", "en": "I'll take care of it", "category": "life", "example": ""}, {"id": "s47", "it": "mi raccomando", "en": "please make sure / don't forget", "category": "life", "example": "Mi raccomando, segna tutto sul foglio."}, {"id": "s48", "it": "un attimo", "en": "just a moment / quickly", "category": "life", "example": ""}, {"id": "s49", "it": "boh", "en": "no idea / dunno", "category": "life", "example": ""}, {"id": "s50", "it": "ci sentiamo", "en": "talk soon / we'll be in touch", "category": "life", "example": ""}];
+const KEY = "parole-v2", OLD_KEY = "parole-di-reparto-v1", PREFS = "parole-prefs";
+const DAY = 86400000;
 const $ = id => document.getElementById(id);
-let cards = [], order = [], pos = 0, flipped = false, db = null, col = null, editing = null, loaded = false;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const newId = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const startOfDay = t => { const d = new Date(t); d.setHours(0,0,0,0); return d.getTime(); };
 
-function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-function catOpts(withAll){
-  return (withAll?'<option value="all">All categories</option>':'') +
-    Object.entries(CATS).map(([k,c])=>`<option value="${k}">${c.name}</option>`).join("");
+/* ---------- storage ---------- */
+function freshCard(c){ return {id:c.id||newId(), it:c.it, en:c.en||"", category:CATS[c.category]?c.category:"life", example:c.example||"", created:c.created||Date.now(), due:0, ivl:0, ease:2.5, reps:0, lapses:0}; }
+function load(){
+  try{ const s = localStorage.getItem(KEY); if(s) return JSON.parse(s); }catch(e){}
+  try{ // move cards from version 1
+    const old = localStorage.getItem(OLD_KEY);
+    if(old){ const now = Date.now();
+      return JSON.parse(old).map(c => { const n = freshCard(c); if(c.known){ n.reps = 2; n.ivl = 3; n.due = startOfDay(now) + 3*DAY; } return n; }); }
+  }catch(e){}
+  return STARTER.map(freshCard);
 }
-$("f-cat").innerHTML = catOpts(true); $("in-cat").innerHTML = catOpts(false);
+let cards = load();
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(cards)); $("s-global").textContent = ""; }
+  catch(e){ $("s-global").textContent = "This phone isn't saving changes. Use Backup to keep a copy."; }
+}
+let prefs = {cat:"all", dir:"it"};
+try{ Object.assign(prefs, JSON.parse(localStorage.getItem(PREFS) || "{}")); }catch(e){}
+const savePrefs = () => { try{ localStorage.setItem(PREFS, JSON.stringify(prefs)); }catch(e){} };
 
-function filtered(){
-  const cat=$("f-cat").value, rev=$("f-review").checked;
-  return cards.filter(c=>(cat==="all"||c.category===cat)&&(!rev||!c.known));
+/* ---------- spaced repetition ---------- */
+// Again: back in a few minutes. Hard: a bit longer than last time. Good: interval grows by the card's ease.
+function nextIvl(c, g){
+  if(g === "again") return 0;
+  if(c.reps === 0) return g === "hard" ? 1 : 2;
+  if(g === "hard") return Math.max(1, Math.round(c.ivl * 1.2));
+  return Math.max(c.ivl + 1, Math.round(c.ivl * c.ease));
 }
-function rebuild(shuffle){
-  const ids = filtered().map(c=>c.id);
-  if(shuffle){ for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]]} order=ids; pos=0; }
-  else { const cur=order[pos]; order = order.filter(id=>ids.includes(id)); ids.forEach(id=>{if(!order.includes(id))order.push(id)}); const p=order.indexOf(cur); pos = p>=0?p:Math.min(pos,Math.max(order.length-1,0)); }
+function grade(c, g){
+  const now = Date.now(), ivl = nextIvl(c, g);
+  if(g === "again"){ c.reps = 0; c.lapses++; c.ease = Math.max(1.3, c.ease - 0.2); c.ivl = 0; c.due = now; }
+  else { if(g === "hard") c.ease = Math.max(1.3, c.ease - 0.15); c.reps++; c.ivl = ivl; c.due = startOfDay(now) + ivl*DAY; }
+}
+const fmtIvl = d => d === 0 ? "<1 min" : d < 30 ? d + "g" : d < 365 ? Math.round(d/30) + " mesi" : (d/365).toFixed(1) + " anni";
+const studyable = c => c.en.trim() !== "";
+const isDue = c => studyable(c) && c.due <= Date.now();
+
+/* ---------- study session ---------- */
+let queue = [], current = null, flipped = false, extra = false;
+function buildQueue(){
+  const pool = cards.filter(c => prefs.cat === "all" || c.category === prefs.cat);
+  const list = extra ? pool.filter(studyable).sort((a,b) => a.due - b.due).slice(0, 20) : pool.filter(isDue);
+  // reviews first (oldest due first), then new cards in the order they were added
+  list.sort((a,b) => (a.reps === 0) - (b.reps === 0) || (a.reps === 0 ? a.created - b.created : a.due - b.due));
+  queue = list.map(c => c.id);
+  nextCard();
+}
+function nextCard(){
+  flipped = false;
+  current = null;
+  while(queue.length){ const c = cards.find(x => x.id === queue[0]); if(c && studyable(c)){ current = c; break; } queue.shift(); }
   renderStudy();
 }
+function answer(g){
+  if(!current) return;
+  grade(current, g);
+  queue.shift();
+  if(g === "again") queue.push(current.id); // see it again before the session ends
+  save();
+  nextCard();
+}
+
+/* ---------- pronunciation ---------- */
+let itVoice = null;
+function pickVoice(){
+  if(!("speechSynthesis" in window)) return;
+  const vs = speechSynthesis.getVoices().filter(v => /^it/i.test(v.lang));
+  itVoice = vs.find(v => /it-IT/i.test(v.lang) && v.localService) || vs[0] || null;
+}
+if("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(text){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "it-IT"; if(itVoice) u.voice = itVoice; u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+const SPEAK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+
+/* ---------- render: study ---------- */
+function renderToday(){
+  const due = cards.filter(isDue).length, todo = cards.filter(c => !studyable(c)).length;
+  $("today").innerHTML = `<b>${due}</b> da ripassare` + (todo ? ` · ${todo} senza traduzione` : "");
+}
 function renderStudy(){
-  const box=$("cardbox"), total=order.length;
-  $("controls").hidden = total===0;
-  if(!loaded){ box.innerHTML='<div class="empty">Loading your cards…</div>'; $("m-pos").textContent=""; $("m-known").textContent=""; return; }
-  if(!total){
-    box.innerHTML = cards.length
-      ? '<div class="empty">No cards match this filter. Untick “Only cards to review” or pick another category.</div>'
-      : '<div class="empty">No cards yet. Open <b>Edit cards</b> to add the first word you heard today.</div>';
-    $("m-pos").textContent=""; $("m-known").textContent=""; return;
+  renderToday();
+  const stage = $("stage"), act = $("actions");
+  const total = cards.filter(c => prefs.cat === "all" || c.category === prefs.cat).length;
+  $("m-total").textContent = `${total} carte`;
+  if(!current){
+    extra = false;
+    const upcoming = cards.filter(c => studyable(c) && (prefs.cat === "all" || c.category === prefs.cat)).sort((a,b) => a.due - b.due)[0];
+    const when = upcoming ? Math.max(1, Math.round((startOfDay(upcoming.due) - startOfDay(Date.now())) / DAY)) : 0;
+    stage.innerHTML = `<div class="done"><h2>Fatto per oggi</h2>
+      <p>${upcoming ? `Next card comes back in ${when} ${when === 1 ? "day" : "days"}.` : "Add some words with the + button."}</p>
+      ${upcoming ? '<button class="btn" id="b-extra">Study 20 more anyway</button>' : ""}</div>`;
+    act.innerHTML = ""; $("m-left").textContent = "";
+    const be = $("b-extra"); if(be) be.onclick = () => { extra = true; buildQueue(); };
+    return;
   }
-  const c = cards.find(x=>x.id===order[pos]); if(!c) return;
-  const cat = CATS[c.category]||CATS.life, itFirst = $("f-dir").value==="it";
+  const c = current, cat = CATS[c.category] || CATS.life, itFirst = prefs.dir === "it";
   const front = itFirst ? c.it : c.en, back = itFirst ? c.en : c.it;
   const jacket = `CAVICEL · ${cat.mark} · ${c.it.toUpperCase()} · `.repeat(4);
-  box.innerHTML = `<div class="card${flipped?" flipped":""}" id="card" tabindex="0" role="button" aria-label="Flip card">
+  const top = side => `<div class="top"><span><span class="wire w-${c.category}"></span> ${cat.name}</span><span>${c.reps === 0 ? "NUOVA" : side}</span></div>`;
+  const spk = '<button class="speak" data-speak aria-label="Listen">' + SPEAK_SVG + "</button>";
+  stage.innerHTML = `<div class="card${flipped ? " flipped" : ""}" id="card" tabindex="0" role="button" aria-label="Flip card">
+    <span class="stamp good" id="st-good">LO SO</span><span class="stamp again" id="st-again">ANCORA</span>
     <div class="card-inner">
-      <div class="face"><div class="top"><span><span class="wire ${cat.wire}"></span> ${cat.name}</span><span>${itFirst?"IT":"EN"}</span></div>
-        <div class="term"><div class="w">${esc(front)}</div></div><div class="jacket">${esc(jacket)}</div></div>
-      <div class="face back"><div class="top"><span><span class="wire ${cat.wire}"></span> ${cat.name}</span><span>${itFirst?"EN":"IT"}</span></div>
-        <div class="term"><div class="w">${esc(back)}</div>${c.example?`<div class="ex">“${esc(c.example)}”</div>`:""}</div><div class="jacket">${esc(jacket)}</div></div>
+      <div class="face">${top(itFirst ? "IT" : "EN")}<div class="term"><div class="w">${esc(front)}</div>${itFirst ? spk : ""}</div><div class="jacket">${esc(jacket)}</div></div>
+      <div class="face back">${top(itFirst ? "EN" : "IT")}<div class="term"><div class="w">${esc(back)}</div>${itFirst ? "" : spk}${c.example ? `<div class="ex">“${esc(c.example)}”</div>` : ""}</div><div class="jacket">${esc(jacket)}</div></div>
     </div></div>`;
-  const el=$("card"); const flip=()=>{flipped=!flipped; el.classList.toggle("flipped",flipped)};
-  el.onclick=flip; el.onkeydown=e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();flip()}};
-  $("m-pos").textContent = `${pos+1} / ${total}`;
-  $("m-known").textContent = `${cards.filter(x=>x.known).length} of ${cards.length} known`;
+  $("m-left").textContent = `${queue.length} ${queue.length === 1 ? "carta rimasta" : "carte rimaste"}`;
+  renderActions();
+  bindCard($("card"));
 }
-function step(d){ if(!order.length)return; pos=(pos+d+order.length)%order.length; flipped=false; renderStudy(); }
-$("b-next").onclick=()=>step(1); $("b-prev").onclick=()=>step(-1);
-$("b-shuffle").onclick=()=>{flipped=false;rebuild(true)};
-["f-cat","f-review"].forEach(id=>$(id).onchange=()=>{flipped=false;rebuild(false)});
-$("f-dir").onchange=()=>{flipped=false;renderStudy()};
-document.addEventListener("keydown",e=>{ if($("study").hidden||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return; if(e.key==="ArrowRight")step(1); if(e.key==="ArrowLeft")step(-1); });
-
-async function mark(known){
-  const id=order[pos]; if(!id)return;
-  const c=cards.find(x=>x.id===id); if(c) c.known=known;
-  const reviewOnly=$("f-review").checked;
-  if(reviewOnly&&known){ order.splice(pos,1); if(pos>=order.length)pos=0; flipped=false; renderStudy(); } else step(1);
-  if(col){ try{ await col.doc(id).update({known}); }catch(e){ $("s-global").textContent="Couldn't save that. Check your connection and try again."; } }
+function renderActions(){
+  const act = $("actions");
+  if(!flipped){ act.innerHTML = '<button class="btn primary reveal" id="b-reveal">Mostra risposta</button><p class="hint">Tap to flip · swipe right “lo so”, left “ancora”</p>'; $("b-reveal").onclick = flip; return; }
+  const c = current;
+  act.innerHTML = `<div class="grade">
+    <button class="btn g-again" data-g="again">Ancora<small>${fmtIvl(nextIvl(c,"again"))}</small></button>
+    <button class="btn g-hard" data-g="hard">Difficile<small>${fmtIvl(nextIvl(c,"hard"))}</small></button>
+    <button class="btn g-good" data-g="good">Lo so<small>${fmtIvl(nextIvl(c,"good"))}</small></button></div>`;
+  act.querySelectorAll("[data-g]").forEach(b => b.onclick = () => answer(b.dataset.g));
 }
-$("b-known").onclick=()=>mark(true); $("b-again").onclick=()=>mark(false);
+function flip(){
+  flipped = !flipped;
+  const el = $("card"); if(el) el.classList.toggle("flipped", flipped);
+  renderActions();
+}
+function bindCard(el){
+  let x0 = null, y0 = 0, dx = 0, id = null, moved = false, swiped = false;
+  const reset = () => { el.classList.remove("dragging"); el.style.transform = ""; $("st-good").style.opacity = 0; $("st-again").style.opacity = 0; };
+  el.addEventListener("pointerdown", e => {
+    if(e.target.closest("[data-speak]")) return;
+    x0 = e.clientX; y0 = e.clientY; dx = 0; moved = false; id = e.pointerId;
+  });
+  el.addEventListener("pointermove", e => {
+    if(x0 === null || e.pointerId !== id) return;
+    dx = e.clientX - x0;
+    if(!moved && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(e.clientY - y0)){ moved = true; el.classList.add("dragging"); try{ el.setPointerCapture(id); }catch(_){} }
+    if(moved){
+      el.style.transform = `translateX(${dx}px) rotate(${dx/18}deg)`;
+      $("st-good").style.opacity = Math.max(0, Math.min(1, dx/100));
+      $("st-again").style.opacity = Math.max(0, Math.min(1, -dx/100));
+    }
+  });
+  const end = e => {
+    if(x0 === null || e.pointerId !== id) return;
+    x0 = null;
+    if(!moved) return; // a plain tap is handled by the click listener below
+    swiped = true; setTimeout(() => { swiped = false; }, 400);
+    if(dx > 100){ el.style.transform = "translateX(120%) rotate(12deg)"; setTimeout(() => answer("good"), 180); }
+    else if(dx < -100){ el.style.transform = "translateX(-120%) rotate(-12deg)"; setTimeout(() => answer("again"), 180); }
+    else reset();
+  };
+  el.addEventListener("pointerup", end);
+  el.addEventListener("pointercancel", e => { x0 = null; reset(); });
+  el.addEventListener("click", e => { if(swiped || e.target.closest("[data-speak]")) return; flip(); });
+  el.addEventListener("keydown", e => { if(e.key === " " || e.key === "Enter"){ e.preventDefault(); flip(); } });
+  el.querySelectorAll("[data-speak]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); speak(current.it); }));
+}
+document.addEventListener("keydown", e => {
+  if($("study").hidden || $("dlg").open || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || !current) return;
+  if(flipped && e.key === "1") answer("again");
+  if(flipped && e.key === "2") answer("hard");
+  if(flipped && e.key === "3") answer("good");
+});
 
-/* tabs */
-function showTab(t){ $("study").hidden=t!=="study"; $("manage").hidden=t!=="manage";
-  $("tab-study").setAttribute("aria-selected",t==="study"); $("tab-manage").setAttribute("aria-selected",t==="manage"); if(t==="manage")renderList(); }
-$("tab-study").onclick=()=>showTab("study"); $("tab-manage").onclick=()=>showTab("manage");
+/* ---------- filters and tabs ---------- */
+const catOpts = all => (all ? '<option value="all">All categories</option>' : "") + Object.entries(CATS).map(([k,c]) => `<option value="${k}">${c.name}</option>`).join("");
+$("f-cat").innerHTML = catOpts(true); $("a-cat").innerHTML = catOpts(false);
+$("f-cat").value = CATS[prefs.cat] ? prefs.cat : "all"; $("f-dir").value = prefs.dir === "en" ? "en" : "it";
+$("f-cat").onchange = () => { prefs.cat = $("f-cat").value; savePrefs(); extra = false; buildQueue(); };
+$("f-dir").onchange = () => { prefs.dir = $("f-dir").value; savePrefs(); flipped = false; renderStudy(); };
+function showTab(t){
+  $("study").hidden = t !== "study"; $("cards").hidden = t !== "cards";
+  $("tab-study").setAttribute("aria-selected", t === "study"); $("tab-cards").setAttribute("aria-selected", t === "cards");
+  if(t === "cards") renderList(); else buildQueue();
+}
+$("tab-study").onclick = () => showTab("study"); $("tab-cards").onclick = () => showTab("cards");
 
-/* manage */
+/* ---------- card list ---------- */
 function renderList(){
-  const q=$("in-search").value.trim().toLowerCase();
-  const rows=cards.filter(c=>!q||(c.it+" "+c.en+" "+(c.example||"")).toLowerCase().includes(q))
-    .sort((a,b)=>a.it.localeCompare(b.it,"it"));
-  $("list").innerHTML = rows.length ? rows.map(c=>{const cat=CATS[c.category]||CATS.life; return `<div class="item">
-    <span class="wire ${cat.wire}" title="${cat.name}"></span>
-    <div><div class="it">${esc(c.it)} ${c.known?'<span class="known">KNOWN</span>':""}</div><div class="en">${esc(c.en)}</div></div>
-    <div class="row"><button class="btn" data-edit="${c.id}">Edit</button><button class="btn danger" data-del="${c.id}">Delete</button></div></div>`}).join("")
-    : `<p class="small">${cards.length?"No cards match your search.":"No cards yet."}</p>`;
+  const q = $("in-search").value.trim().toLowerCase(), f = $("l-filter").value;
+  const rows = cards.filter(c => (!q || (c.it + " " + c.en + " " + c.example).toLowerCase().includes(q))
+      && (f === "all" || (f === "todo" && !studyable(c)) || (f === "due" && isDue(c))))
+    .sort((a,b) => a.it.localeCompare(b.it, "it"));
+  $("list").innerHTML = rows.length ? rows.map(c => `<div class="item">
+      <span class="wire w-${c.category}" title="${CATS[c.category].name}"></span>
+      <div><div class="it">${esc(c.it)}${!studyable(c) ? '<span class="pill todo">ADD MEANING</span>' : isDue(c) ? '<span class="pill due">OGGI</span>' : ""}</div>
+      <div class="en">${esc(c.en) || "—"}</div></div>
+      <button class="btn" data-edit="${c.id}">Edit</button></div>`).join("")
+    : `<p class="small">${cards.length ? "No cards match." : "No cards yet. Tap + to add one."}</p>`;
 }
-$("in-search").oninput=renderList;
-$("list").onclick=async e=>{
-  const ed=e.target.dataset.edit, del=e.target.dataset.del;
-  if(ed){ const c=cards.find(x=>x.id===ed); editing=ed; $("in-it").value=c.it; $("in-en").value=c.en; $("in-ex").value=c.example||""; $("in-cat").value=c.category;
-    $("form-title").textContent="Edit card"; $("b-save").textContent="Save changes"; $("b-cancel").hidden=false; $("in-it").focus(); window.scrollTo({top:0,behavior:"smooth"}); }
-  if(del){
-    if(e.target.dataset.confirm!=="1"){ e.target.dataset.confirm="1"; e.target.textContent="Confirm delete"; return; }
-    try{ await col.doc(del).delete(); }catch(err){ $("s-global").textContent="Couldn't delete that card. Try again."; }
+$("in-search").oninput = renderList; $("l-filter").onchange = renderList;
+$("list").onclick = e => { const id = e.target.dataset.edit; if(id) openDialog(cards.find(c => c.id === id)); };
+
+/* ---------- add / edit dialog ---------- */
+let editing = null;
+function openDialog(c){
+  editing = c || null;
+  $("dlg-title").textContent = c ? "Modifica" : "Nuova parola";
+  $("a-it").value = c ? c.it : ""; $("a-en").value = c ? c.en : ""; $("a-ex").value = c ? c.example : "";
+  $("a-cat").value = c ? c.category : (CATS[prefs.cat] ? prefs.cat : "life");
+  $("a-del").hidden = !c; $("a-del").textContent = "Delete"; delete $("a-del").dataset.confirm;
+  $("a-more").hidden = !!c; $("s-add").textContent = "";
+  $("dlg").showModal(); setTimeout(() => $("a-it").focus(), 50);
+}
+function saveDialog(){
+  const it = $("a-it").value.trim();
+  if(!it){ $("s-add").textContent = "Write the Italian word first."; $("a-it").focus(); return false; }
+  const body = {it, en:$("a-en").value.trim(), example:$("a-ex").value.trim(), category:$("a-cat").value};
+  if(editing) Object.assign(editing, body); else cards.push(freshCard(body));
+  save(); refreshAll(); return true;
+}
+function refreshAll(){ if(!$("cards").hidden) renderList(); if(current && !cards.includes(current)) current = null; if(!$("study").hidden && !current) buildQueue(); else renderStudy(); }
+$("fab").onclick = () => openDialog(null);
+$("f-add").onsubmit = e => { e.preventDefault(); if(saveDialog()) $("dlg").close(); };
+$("a-more").onclick = () => { const it = $("a-it").value.trim(); if(saveDialog()){ openDialog(null); $("s-add").textContent = `Saved “${it}”.`; } };
+$("a-cancel").onclick = () => $("dlg").close();
+$("a-del").onclick = e => {
+  if(e.target.dataset.confirm !== "1"){ e.target.dataset.confirm = "1"; e.target.textContent = "Tap again to delete"; return; }
+  cards = cards.filter(c => c !== editing); queue = queue.filter(id => id !== editing.id);
+  save(); $("dlg").close(); refreshAll();
+};
+
+/* ---------- bulk add, CSV, backup ---------- */
+const keyOf = (it, en) => (it.trim() + "|" + (en || "").trim()).toLowerCase();
+function catOf(s){
+  const v = (s || "").trim().toLowerCase();
+  if(CATS[v]) return v;
+  if(/^(lab|prov|labor)/.test(v)) return "lab";
+  if(/^(mat|cav)/.test(v)) return "materials";
+  if(/^(qual|prod)/.test(v)) return "quality";
+  if(/^(off|uff|mail|email)/.test(v)) return "office";
+  return "life";
+}
+// rows: [{it, en, category, example}] -> adds the new ones, returns counts
+function addMany(rows){
+  const have = new Set(cards.map(c => keyOf(c.it, c.en)));
+  let n = 0, skip = 0;
+  for(const r of rows){
+    if(!r.it || have.has(keyOf(r.it, r.en))){ skip++; continue; }
+    cards.push(freshCard({it:r.it.trim(), en:(r.en || "").trim(), category:catOf(r.category), example:(r.example || "").trim()}));
+    have.add(keyOf(r.it, r.en)); n++;
   }
+  save(); renderList(); renderToday();
+  return {n, skip};
+}
+const countMsg = ({n, skip}) => `Added ${n} card${n === 1 ? "" : "s"}${skip ? `, skipped ${skip} (empty or already there)` : ""}.`;
+
+$("b-bulk").onclick = () => {
+  const rows = $("in-bulk").value.split("\n").map(l => l.trim()).filter(Boolean).map(line => {
+    const [it, en, category, example] = line.split("|").map(s => (s || "").trim());
+    return {it, en, category, example};
+  });
+  const res = addMany(rows);
+  $("s-bulk").textContent = countMsg(res);
+  if(res.n) $("in-bulk").value = "";
 };
-function resetForm(){ editing=null; ["in-it","in-en","in-ex"].forEach(i=>$(i).value=""); $("form-title").textContent="Add a card"; $("b-save").textContent="Add card"; $("b-cancel").hidden=true; }
-$("b-cancel").onclick=resetForm;
-$("b-save").onclick=async()=>{
-  const it=$("in-it").value.trim(), en=$("in-en").value.trim();
-  if(!it||!en){ $("s-form").textContent="Fill in both the Italian and the English."; return; }
-  
-  const body={it,en,example:$("in-ex").value.trim(),category:$("in-cat").value};
+
+// CSV reader: quoted fields, "" escapes, line breaks inside quotes; comma, semicolon or tab
+function parseCSV(text){
+  text = text.replace(/^﻿/, "");
+  const firstLine = text.split(/\r?\n/).find(l => l.trim()) || "";
+  const counts = {",":0, ";":0, "\t":0}; let q = false;
+  for(const ch of firstLine){ if(ch === '"') q = !q; else if(!q && ch in counts) counts[ch]++; }
+  const d = Object.keys(counts).sort((a,b) => counts[b] - counts[a])[0];
+  const rows = []; let row = [], f = "", inQ = false;
+  for(let i = 0; i < text.length; i++){
+    const ch = text[i];
+    if(inQ){
+      if(ch === '"'){ if(text[i+1] === '"'){ f += '"'; i++; } else inQ = false; }
+      else f += ch;
+    } else if(ch === '"' && f === "") inQ = true;
+    else if(ch === d){ row.push(f); f = ""; }
+    else if(ch === "\n" || ch === "\r"){ if(ch === "\r" && text[i+1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += ch;
+  }
+  if(f !== "" || row.length){ row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(c => c.trim() !== ""));
+}
+const COLS = {
+  it:/^(it|ita|italian|italiano|parola|word|termine|term|front|fronte)$/,
+  en:/^(en|eng|english|inglese|traduzione|translation|meaning|significato|back|retro)$/,
+  category:/^(cat|category|categoria|tag|tags|gruppo|group)$/,
+  example:/^(ex|example|esempio|frase|sentence|note|notes)$/
+};
+function csvToCards(rows){
+  if(!rows.length) return [];
+  const head = rows[0].map(h => h.trim().toLowerCase());
+  const map = {};
+  head.forEach((h, i) => { for(const [k, re] of Object.entries(COLS)) if(re.test(h) && !(k in map)) map[k] = i; });
+  const hasHeader = "it" in map || "en" in map;
+  const idx = hasHeader ? {it:map.it ?? 0, en:map.en ?? 1, category:map.category ?? -1, example:map.example ?? -1} : {it:0, en:1, category:2, example:3};
+  return (hasHeader ? rows.slice(1) : rows).map(r => ({
+    it:(r[idx.it] || "").trim(), en:(r[idx.en] || "").trim(),
+    category:idx.category >= 0 ? (r[idx.category] || "") : "", example:idx.example >= 0 ? (r[idx.example] || "").trim() : ""
+  }));
+}
+let pending = [];
+$("in-csv").onchange = async e => {
+  const file = e.target.files[0]; e.target.value = "";
+  if(!file) return;
+  $("s-csv").textContent = "";
+  let text;
+  try{ text = await file.text(); }catch(err){ $("s-csv").textContent = "This file couldn't be opened. Try saving it again as CSV."; return; }
+  if(text.includes("�")){ // not UTF-8: Excel on Windows often saves CSV as Windows-1252
+    try{ text = new TextDecoder("windows-1252").decode(await file.arrayBuffer()); }catch(err){}
+  }
+  pending = csvToCards(parseCSV(text)).filter(r => r.it);
+  if(!pending.length){ $("csv-preview").hidden = true; $("s-csv").textContent = "No words found. The first column should hold the Italian."; return; }
+  const have = new Set(cards.map(c => keyOf(c.it, c.en)));
+  const fresh = pending.filter(r => !have.has(keyOf(r.it, r.en))).length;
+  $("csv-summary").textContent = `${file.name}: ${pending.length} word${pending.length === 1 ? "" : "s"} found, ${fresh} new. First rows:`;
+  $("csv-rows").innerHTML = pending.slice(0, 5).map(r => `<div class="item" style="grid-template-columns:auto 1fr">
+      <span class="wire w-${catOf(r.category)}"></span><div><div class="it">${esc(r.it)}</div><div class="en">${esc(r.en) || "—"}</div></div></div>`).join("");
+  $("b-csv-go").textContent = fresh ? `Import ${fresh} new card${fresh === 1 ? "" : "s"}` : "Nothing new to import";
+  $("b-csv-go").disabled = !fresh;
+  $("csv-preview").hidden = false;
+};
+$("b-csv-go").onclick = () => { const res = addMany(pending); pending = []; $("csv-preview").hidden = true; $("s-csv").textContent = countMsg(res); };
+$("b-csv-cancel").onclick = () => { pending = []; $("csv-preview").hidden = true; };
+
+$("b-csv-out").onclick = async () => {
+  const cell = v => { v = String(v ?? ""); return /[",;\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const csv = "﻿" + ["italiano,english,category,example", ...cards.map(c => [c.it, c.en, c.category, c.example].map(cell).join(","))].join("\r\n");
+  const name = `parole-${new Date().toISOString().slice(0,10)}.csv`;
+  const file = new File([csv], name, {type:"text/csv"});
   try{
-    if(editing){ await col.doc(editing).update(body); $("s-form").textContent="Saved."; }
-    else { await col.doc().set({...body,known:false,created:Date.now()}); $("s-form").textContent=`Added “${it}”.`; }
-    resetForm();
-  }catch(e){ $("s-form").textContent = e&&e.code==="quota_exceeded" ? "Couldn't save." : "Couldn't save. Check your connection and try again."; }
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:name}); $("s-backup").textContent = "Choose “Save to Files” to keep it."; return; }
+  }catch(err){ if(err && err.name === "AbortError") return; }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  $("s-backup").textContent = `Saved ${name}.`;
 };
-$("b-bulk").onclick=async()=>{
-  
-  const lines=$("in-bulk").value.split("\n").map(l=>l.trim()).filter(Boolean); let n=0, bad=0;
-  for(const l of lines){ const [it,en,cat,ex]=l.split("|").map(s=>(s||"").trim());
-    if(!it||!en){bad++;continue}
-    const category = CATS[(cat||"").toLowerCase()] ? cat.toLowerCase() : "life";
-    try{ await col.doc().set({it,en,category,example:ex||"",known:false,created:Date.now()}); n++; }catch(e){bad++} }
-  $("s-bulk").textContent=`Added ${n} card${n===1?"":"s"}${bad?`, skipped ${bad} line${bad===1?"":"s"}`:""}.`; if(n) $("in-bulk").value="";
+$("b-export").onclick = async () => {
+  const txt = cards.map(c => [c.it, c.en, c.category, c.example].join(" | ")).join("\n");
+  const ta = $("out-backup"); ta.hidden = false; ta.value = txt;
+  try{ await navigator.clipboard.writeText(txt); $("s-backup").textContent = `Copied all ${cards.length} cards. Paste them into a note to keep them safe.`; }
+  catch(e){ ta.focus(); ta.select(); $("s-backup").textContent = "Select the text and copy it into a note."; }
 };
-
-/* data — stored in this browser on this phone */
-const KEY="parole-di-reparto-v1";
-const STARTER=[{"id": "s01", "it": "il provino", "en": "test specimen", "category": "lab", "example": "Prepariamo i provini per la prova di domani.", "known": false}, {"id": "s02", "it": "la prova di reazione al fuoco", "en": "reaction-to-fire test", "category": "lab", "example": "", "known": false}, {"id": "s03", "it": "la resistenza al fuoco", "en": "fire resistance", "category": "lab", "example": "", "known": false}, {"id": "s04", "it": "il rilascio di calore", "en": "heat release", "category": "lab", "example": "", "known": false}, {"id": "s05", "it": "la propagazione della fiamma", "en": "flame spread", "category": "lab", "example": "", "known": false}, {"id": "s06", "it": "l'opacità dei fumi", "en": "smoke opacity", "category": "lab", "example": "", "known": false}, {"id": "s07", "it": "il gocciolamento", "en": "dripping (flaming droplets)", "category": "lab", "example": "", "known": false}, {"id": "s08", "it": "la taratura", "en": "calibration", "category": "lab", "example": "Lo strumento è in taratura fino a lunedì.", "known": false}, {"id": "s09", "it": "il banco prova", "en": "test bench / test rig", "category": "lab", "example": "", "known": false}, {"id": "s10", "it": "la cappa", "en": "fume hood", "category": "lab", "example": "", "known": false}, {"id": "s11", "it": "il campione", "en": "sample", "category": "lab", "example": "", "known": false}, {"id": "s12", "it": "la guaina", "en": "sheath / outer jacket", "category": "materials", "example": "", "known": false}, {"id": "s13", "it": "l'isolante", "en": "insulation (material)", "category": "materials", "example": "", "known": false}, {"id": "s14", "it": "il conduttore", "en": "conductor", "category": "materials", "example": "", "known": false}, {"id": "s15", "it": "la sezione", "en": "cross-section (of a conductor)", "category": "materials", "example": "Che sezione ha questo cavo?", "known": false}, {"id": "s16", "it": "la mescola", "en": "compound (rubber/plastic blend)", "category": "materials", "example": "", "known": false}, {"id": "s17", "it": "il rame", "en": "copper", "category": "materials", "example": "", "known": false}, {"id": "s18", "it": "la bobina", "en": "reel / drum", "category": "materials", "example": "", "known": false}, {"id": "s19", "it": "lo spessore", "en": "thickness", "category": "materials", "example": "", "known": false}, {"id": "s20", "it": "il diametro esterno", "en": "outer diameter", "category": "materials", "example": "", "known": false}, {"id": "s21", "it": "la scheda tecnica", "en": "technical datasheet", "category": "materials", "example": "", "known": false}, {"id": "s22", "it": "il lotto", "en": "batch / lot", "category": "quality", "example": "", "known": false}, {"id": "s23", "it": "la non conformità", "en": "nonconformity", "category": "quality", "example": "Apriamo una non conformità sul lotto.", "known": false}, {"id": "s24", "it": "fuori specifica", "en": "out of spec", "category": "quality", "example": "", "known": false}, {"id": "s25", "it": "la tolleranza", "en": "tolerance", "category": "quality", "example": "", "known": false}, {"id": "s26", "it": "il collaudo", "en": "final inspection / acceptance test", "category": "quality", "example": "", "known": false}, {"id": "s27", "it": "l'estrusione", "en": "extrusion", "category": "quality", "example": "", "known": false}, {"id": "s28", "it": "il reparto", "en": "department / production area", "category": "quality", "example": "Passo un attimo in reparto.", "known": false}, {"id": "s29", "it": "il turno", "en": "shift", "category": "quality", "example": "", "known": false}, {"id": "s30", "it": "la commessa", "en": "customer order / job", "category": "quality", "example": "", "known": false}, {"id": "s31", "it": "il fornitore", "en": "supplier", "category": "quality", "example": "", "known": false}, {"id": "s32", "it": "i DPI", "en": "PPE (personal protective equipment)", "category": "quality", "example": "", "known": false}, {"id": "s33", "it": "la riunione", "en": "meeting", "category": "office", "example": "", "known": false}, {"id": "s34", "it": "il verbale", "en": "minutes (of a meeting)", "category": "office", "example": "", "known": false}, {"id": "s35", "it": "in allegato", "en": "attached (to an email)", "category": "office", "example": "In allegato trovi il report.", "known": false}, {"id": "s36", "it": "ti giro la mail", "en": "I'll forward you the email", "category": "office", "example": "", "known": false}, {"id": "s37", "it": "la scadenza", "en": "deadline", "category": "office", "example": "", "known": false}, {"id": "s38", "it": "sollecitare", "en": "to chase up / send a reminder", "category": "office", "example": "Sollecito il fornitore per i certificati.", "known": false}, {"id": "s39", "it": "fare il punto", "en": "to review where things stand", "category": "office", "example": "Facciamo il punto venerdì.", "known": false}, {"id": "s40", "it": "prendere in carico", "en": "to take charge of (a task)", "category": "office", "example": "Lo prendo in carico io.", "known": false}, {"id": "s41", "it": "timbrare", "en": "to clock in / out", "category": "life", "example": "", "known": false}, {"id": "s42", "it": "le ferie", "en": "annual leave / holidays", "category": "life", "example": "", "known": false}, {"id": "s43", "it": "il permesso", "en": "time off (hours)", "category": "life", "example": "Domani prendo due ore di permesso.", "known": false}, {"id": "s44", "it": "la busta paga", "en": "payslip", "category": "life", "example": "", "known": false}, {"id": "s45", "it": "la mensa", "en": "canteen", "category": "life", "example": "", "known": false}, {"id": "s46", "it": "ci penso io", "en": "I'll take care of it", "category": "life", "example": "", "known": false}, {"id": "s47", "it": "mi raccomando", "en": "please make sure / don't forget", "category": "life", "example": "Mi raccomando, segna tutto sul foglio.", "known": false}, {"id": "s48", "it": "un attimo", "en": "just a moment / quickly", "category": "life", "example": "", "known": false}, {"id": "s49", "it": "boh", "en": "no idea / dunno", "category": "life", "example": "", "known": false}, {"id": "s50", "it": "ci sentiamo", "en": "talk soon / we'll be in touch", "category": "life", "example": "", "known": false}];
-function saveLocal(){ try{ localStorage.setItem(KEY,JSON.stringify(cards)); $("s-global").textContent=""; }catch(e){ $("s-global").textContent="This browser isn't saving changes. Use Backup below to keep a copy."; } }
-function refresh(){ rebuild(false); if(!$("manage").hidden) renderList(); saveLocal(); }
-col = {
-  doc(id){ id = id || ("c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
-    return {
-      async set(body){ const i=cards.findIndex(c=>c.id===id); const c={id,...body}; if(i>=0)cards[i]=c; else cards.push(c); refresh(); },
-      async update(body){ const c=cards.find(c=>c.id===id); if(c)Object.assign(c,body); refresh(); },
-      async delete(){ cards=cards.filter(c=>c.id!==id); refresh(); }
-    }; }
-};
-try{ const s=localStorage.getItem(KEY); cards = s ? JSON.parse(s) : STARTER.map(c=>({...c})); }catch(e){ cards = STARTER.map(c=>({...c})); }
-loaded=true; rebuild(true);
-
-/* backup */
-$("b-export").onclick=async()=>{
-  const txt=cards.map(c=>[c.it,c.en,c.category,c.example||""].join(" | ")).join("\n");
-  const ta=$("out-backup"); ta.hidden=false; ta.value=txt;
-  try{ await navigator.clipboard.writeText(txt); $("s-backup").textContent="Copied all "+cards.length+" cards. Paste them into a note to keep them safe."; }
-  catch(e){ ta.focus(); ta.select(); $("s-backup").textContent="Select the text and copy it into a note."; }
-};
-$("b-reset").onclick=e=>{
-  if(e.target.dataset.confirm!=="1"){ e.target.dataset.confirm="1"; e.target.textContent="Tap again to delete every card"; return; }
-  cards=[]; e.target.dataset.confirm=""; e.target.textContent="Delete all cards"; refresh();
+$("b-reset").onclick = e => {
+  if(e.target.dataset.confirm !== "1"){ e.target.dataset.confirm = "1"; e.target.textContent = "Tap again to delete every card"; return; }
+  cards = []; queue = []; current = null; save(); e.target.dataset.confirm = ""; e.target.textContent = "Delete all cards"; renderList(); renderToday();
 };
 
-if("serviceWorker" in navigator && location.protocol==="https:"){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+/* ---------- start ---------- */
+save();
+buildQueue();
+document.addEventListener("visibilitychange", () => { if(!document.hidden && !$("study").hidden && !current) buildQueue(); });
+if("serviceWorker" in navigator && location.protocol === "https:"){ navigator.serviceWorker.register("sw.js").catch(() => {}); }
 </script>
-</body></html>
+</body>
+</html>
