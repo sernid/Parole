@@ -44,7 +44,13 @@ h1{font-family:var(--f-display);font-weight:800;font-size:clamp(1.7rem,6vw,2.3re
 .today{font:600 .8rem var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;margin-top:4px}
 .today b{color:var(--copper);font-size:1rem}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
-.tab{font:600 .95rem var(--f-body);background:none;border:0;color:var(--muted);padding:10px 14px;border-bottom:3px solid transparent;cursor:pointer}
+.tab{font:600 .95rem var(--f-body);background:none;border:0;color:var(--muted);padding:10px 10px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+.tabs{overflow-x:auto;scrollbar-width:none}
+.list-tools{display:flex;flex-direction:column;gap:8px}
+.list-tools input{width:100%;box-sizing:border-box}
+.item .num{font:600 .78rem var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;min-width:2.6em;text-align:right}
+#list .item{grid-template-columns:auto auto 1fr auto}
+#list .item:first-child{border-top:0}
 .tab[aria-selected="true"]{color:var(--ink);border-color:var(--copper)}
 button,select,input,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--copper);outline-offset:2px}
@@ -160,7 +166,8 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
   <div class="tabs" role="tablist">
     <button class="tab" id="tab-study" role="tab" aria-selected="true">Studia</button>
     <button class="tab" id="tab-sfida" role="tab" aria-selected="false">Sfida</button>
-    <button class="tab" id="tab-cards" role="tab" aria-selected="false">Le mie carte</button>
+    <button class="tab" id="tab-lista" role="tab" aria-selected="false">Carte</button>
+    <button class="tab" id="tab-cards" role="tab" aria-selected="false">Strumenti</button>
   </div>
 
   <section id="study" style="display:flex;flex-direction:column;gap:14px">
@@ -208,6 +215,29 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
     </div>
   </section>
 
+  <section id="lista" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="list-tools">
+      <input id="in-search" type="search" placeholder="Cerca una parola" aria-label="Search cards">
+      <div class="filters">
+        <select id="l-cat" aria-label="Category"></select>
+        <select id="l-filter" aria-label="Show">
+          <option value="all">All cards</option>
+          <option value="todo">Missing translation</option>
+          <option value="due">Due today</option>
+          <option value="new">Not studied yet</option>
+        </select>
+        <select id="l-sort" aria-label="Sort">
+          <option value="num">1, 2, 3…</option>
+          <option value="az">A → Z</option>
+          <option value="recent">Newest first</option>
+        </select>
+      </div>
+      <p class="small" id="l-count"></p>
+    </div>
+    <div class="panel" style="padding-block:4px 8px"><div id="list"></div></div>
+    <button class="btn" id="l-more" hidden>Show more</button>
+  </section>
+
   <section id="cards" hidden style="display:flex;flex-direction:column;gap:16px">
     <details class="panel" id="p-decks">
       <summary>Mazzi · ready-made decks</summary>
@@ -250,21 +280,6 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
       <div class="status" id="s-backup"></div>
     </details>
 
-    <div class="panel">
-      <div class="row" style="justify-content:space-between">
-        <h2>Tutte le carte</h2>
-        <input id="in-search" placeholder="Cerca" style="width:11rem" aria-label="Search cards">
-      </div>
-      <div class="row">
-        <select id="l-filter" aria-label="Show">
-          <option value="all">All cards</option>
-          <option value="todo">Missing translation</option>
-          <option value="due">Due today</option>
-          <option value="new">Not studied yet</option>
-        </select>
-      </div>
-      <div id="list"></div>
-    </div>
   </section>
   <div class="status" id="s-global"></div>
 </div>
@@ -522,10 +537,10 @@ $("s-new").onchange = () => { prefs.newPerDay = Number($("s-new").value); savePr
 $("f-dir").onchange = () => { prefs.dir = $("f-dir").value; savePrefs(); flipped = false; renderStudy(); };
 function showTab(t){
   if(t !== "sfida" && sf.running) sfEnd();
-  ["study", "sfida", "cards"].forEach(k => { $(k).hidden = t !== k; $("tab-" + k).setAttribute("aria-selected", t === k); });
-  if(t === "cards") renderList(); else if(t === "study") buildQueue(); else sfShowStart();
+  ["study", "sfida", "lista", "cards"].forEach(k => { $(k).hidden = t !== k; $("tab-" + k).setAttribute("aria-selected", t === k); });
+  if(t === "lista") renderList(true); else if(t === "study") buildQueue(); else if(t === "sfida") sfShowStart();
 }
-$("tab-study").onclick = () => showTab("study"); $("tab-sfida").onclick = () => showTab("sfida"); $("tab-cards").onclick = () => showTab("cards");
+$("tab-study").onclick = () => showTab("study"); $("tab-sfida").onclick = () => showTab("sfida"); $("tab-lista").onclick = () => showTab("lista"); $("tab-cards").onclick = () => showTab("cards");
 
 /* ---------- Sfida: 60-second multiple-choice game ---------- */
 const SF_TIME = 60000, SF_PENALTY = 2000;
@@ -639,19 +654,32 @@ document.addEventListener("keydown", e => {
 });
 
 /* ---------- card list ---------- */
-function renderList(){
-  const q = $("in-search").value.trim().toLowerCase(), f = $("l-filter").value;
+// Each card's number is its place in the order it was added (1 = first card), so it stays the same while you search or filter.
+const PAGE = 100;
+let listShown = PAGE;
+$("l-cat").innerHTML = catOpts(true).replace(">All categories<", ">All<");
+function renderList(reset){
+  if(reset === true) listShown = PAGE;
+  const q = $("in-search").value.trim().toLowerCase(), f = $("l-filter").value, cat = $("l-cat").value, sort = $("l-sort").value;
+  const num = new Map(cards.map((c, i) => [c, i + 1]));
   const rows = cards.filter(c => (!q || (c.it + " " + c.en + " " + c.example).toLowerCase().includes(q))
-      && (f === "all" || (f === "todo" && !studyable(c)) || (f === "due" && isDue(c) && !isNew(c)) || (f === "new" && isNew(c) && studyable(c))))
-    .sort((a,b) => a.it.localeCompare(b.it, "it"));
-  $("list").innerHTML = rows.length ? rows.map(c => `<div class="item">
+      && (cat === "all" || c.category === cat)
+      && (f === "all" || (f === "todo" && !studyable(c)) || (f === "due" && isDue(c) && !isNew(c)) || (f === "new" && isNew(c) && studyable(c))));
+  if(sort === "az") rows.sort((a,b) => a.it.localeCompare(b.it, "it"));
+  if(sort === "recent") rows.reverse();
+  $("l-count").textContent = rows.length === cards.length ? `${cards.length} carte` : `${rows.length} of ${cards.length} carte`;
+  $("l-more").hidden = rows.length <= listShown;
+  $("l-more").textContent = `Show ${Math.min(PAGE, rows.length - listShown)} more`;
+  $("list").innerHTML = rows.length ? rows.slice(0, listShown).map(c => `<div class="item">
+      <span class="num">${num.get(c)}</span>
       <span class="wire w-${c.category}" title="${CATS[c.category].name}"></span>
-      <div><div class="it">${esc(c.it)}${!studyable(c) ? '<span class="pill todo">ADD MEANING</span>' : isNew(c) ? '<span class="pill">NUOVA</span>' : isDue(c) ? '<span class="pill due">OGGI</span>' : ""}</div>
+      <div><div class="it">${esc(c.it)}${!studyable(c) ? '<span class="pill todo">ADD MEANING</span>' : isDue(c) && !isNew(c) ? '<span class="pill due">OGGI</span>' : ""}</div>
       <div class="en">${esc(c.en) || "—"}</div></div>
       <button class="btn" data-edit="${c.id}">Edit</button></div>`).join("")
     : `<p class="small">${cards.length ? "No cards match." : "No cards yet. Tap + to add one."}</p>`;
 }
-$("in-search").oninput = renderList; $("l-filter").onchange = renderList;
+$("in-search").oninput = () => renderList(true); $("l-filter").onchange = () => renderList(true); $("l-cat").onchange = () => renderList(true); $("l-sort").onchange = () => renderList(true);
+$("l-more").onclick = () => { listShown += PAGE; renderList(); };
 $("list").onclick = e => { const id = e.target.dataset.edit; if(id) openDialog(cards.find(c => c.id === id)); };
 
 /* ---------- add / edit dialog ---------- */
@@ -672,7 +700,7 @@ function saveDialog(){
   if(editing) Object.assign(editing, body); else cards.push(freshCard(body));
   save(); refreshAll(); return true;
 }
-function refreshAll(){ if(!$("cards").hidden) renderList(); if(current && !cards.includes(current)) current = null; if(!$("study").hidden && !current) buildQueue(); else renderStudy(); }
+function refreshAll(){ if(!$("lista").hidden) renderList(); if(current && !cards.includes(current)) current = null; if(!$("study").hidden && !current) buildQueue(); else renderStudy(); }
 $("fab").onclick = () => openDialog(null);
 $("f-add").onsubmit = e => { e.preventDefault(); if(saveDialog()) $("dlg").close(); };
 $("a-more").onclick = () => { const it = $("a-it").value.trim(); if(saveDialog()){ openDialog(null); $("s-add").textContent = `Saved “${it}”.`; } };
