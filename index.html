@@ -302,17 +302,27 @@ function newLeft(){
 const dueCount = pool => pool.filter(c => isDue(c) && !isNew(c)).length + Math.min(newLeft(), pool.filter(c => isDue(c) && isNew(c)).length);
 
 /* ---------- study session ---------- */
+// A random but stable number per card and day, so the order is shuffled
+// yet stays the same if you leave the study screen and come back.
+const SALT = Math.random().toString(36).slice(2);
+function mix(c, tag = "pick"){
+  const key = c.id + "|" + tag + "|" + new Date().toDateString() + (tag === "order" ? "|" + SALT : "");
+  let h = 2166136261;
+  for(let i = 0; i < key.length; i++){ h ^= key.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
 let queue = [], current = null, flipped = false, extra = false;
 function buildQueue(){
   const pool = cards.filter(c => prefs.cat === "all" || c.category === prefs.cat);
   let list;
-  if(extra) list = pool.filter(studyable).sort((a,b) => a.due - b.due || a.created - b.created).slice(0, 20);
+  if(extra) list = pool.filter(studyable).sort((a,b) => a.due - b.due || mix(a) - mix(b)).slice(0, 20);
   else {
-    // reviews first (oldest due first), then today's share of new cards in the order they were added
-    const reviews = pool.filter(c => isDue(c) && !isNew(c)).sort((a,b) => a.due - b.due);
-    const fresh = pool.filter(c => isDue(c) && isNew(c)).sort((a,b) => a.created - b.created).slice(0, newLeft());
+    // today's due reviews plus a random pick of new words, all mixed together
+    const reviews = pool.filter(c => isDue(c) && !isNew(c));
+    const fresh = pool.filter(c => isDue(c) && isNew(c)).sort((a,b) => mix(a) - mix(b)).slice(0, newLeft());
     list = reviews.concat(fresh);
   }
+  list.sort((a,b) => mix(a, "order") - mix(b, "order"));
   queue = list.map(c => c.id);
   nextCard();
 }
