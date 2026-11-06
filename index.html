@@ -101,6 +101,11 @@ label.btn{display:inline-block}
 .pill.todo{background:var(--warn-soft);color:var(--warn)}
 .pill.due{background:var(--copper-soft);color:var(--copper)}
 .small{font-size:.85rem;color:var(--muted);margin:0}
+.deck{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.deck > div{min-width:0}
+.deck h3{font:700 1rem var(--f-display);margin:0}
+.deck .lvl{font:600 .7rem var(--f-mono);color:var(--muted);letter-spacing:.05em}
+.deck .status{grid-column:1 / -1}
 .status{font-size:.85rem;color:var(--muted);min-height:1.2em}
 textarea{width:100%;min-height:110px;font-family:var(--f-mono);font-size:.85rem;box-sizing:border-box}
 /* quick add */
@@ -142,6 +147,12 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
   </section>
 
   <section id="cards" hidden style="display:flex;flex-direction:column;gap:16px">
+    <details class="panel" id="p-decks">
+      <summary>Mazzi · ready-made decks</summary>
+      <p class="small">Add a whole deck with one tap. Words you already have are skipped, and new words follow your daily limit.</p>
+      <div id="deck-list"><p class="small">Loading decks…</p></div>
+    </details>
+
     <details class="panel">
       <summary>Import a CSV file</summary>
       <p class="small">Columns: <code>italiano, english, category, example</code>. Only the Italian is required. A header row is fine (Italian or English names), and commas, semicolons or tabs all work, so a file saved from Excel, Numbers or Google Sheets opens as it is.</p>
@@ -577,6 +588,35 @@ $("in-csv").onchange = async e => {
 };
 $("b-csv-go").onclick = () => { const res = addMany(pending); pending = []; $("csv-preview").hidden = true; $("s-csv").textContent = countMsg(res); };
 $("b-csv-cancel").onclick = () => { pending = []; $("csv-preview").hidden = true; };
+
+/* ready-made decks published in the decks/ folder */
+let decksLoaded = false;
+async function loadDecks(){
+  if(decksLoaded) return;
+  const box = $("deck-list");
+  try{
+    const r = await fetch("decks/index.json", {cache:"no-cache"});
+    if(!r.ok) throw new Error(r.status);
+    const decks = await r.json();
+    decksLoaded = true;
+    box.innerHTML = decks.map((d, i) => `<div class="deck">
+        <div><h3>${esc(d.name)}</h3><div class="lvl">${esc(d.level || "")} · ${Number(d.count) || "?"} WORDS</div><p class="small">${esc(d.description || "")}</p></div>
+        <button class="btn primary" data-deck="${i}">Add</button>
+        <div class="status" id="deck-s-${i}"></div></div>`).join("") || '<p class="small">No decks yet.</p>';
+    box.querySelectorAll("[data-deck]").forEach(b => b.onclick = async () => {
+      const d = decks[Number(b.dataset.deck)], st = $("deck-s-" + b.dataset.deck);
+      b.disabled = true; st.textContent = "Adding…";
+      try{
+        const res = await fetch("decks/" + encodeURIComponent(d.file));
+        if(!res.ok) throw new Error(res.status);
+        const out = addMany(csvToCards(parseCSV(await res.text())).filter(x => x.it));
+        st.textContent = countMsg(out);
+      }catch(err){ st.textContent = "This deck couldn't be downloaded. Check your connection and try again."; }
+      b.disabled = false;
+    });
+  }catch(err){ box.innerHTML = '<p class="small">Decks need an internet connection the first time. Try again when you are online.</p>'; }
+}
+$("p-decks").addEventListener("toggle", () => { if($("p-decks").open) loadDecks(); });
 
 $("b-csv-out").onclick = async () => {
   const cell = v => { v = String(v ?? ""); return /[",;\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };

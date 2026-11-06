@@ -1,0 +1,16 @@
+[
+ {
+  "file": "parole-di-reparto.csv",
+  "name": "Parole di reparto",
+  "level": "B1–B2",
+  "count": 50,
+  "description": "Work Italian for a cable plant: fire tests, cables and materials, quality, office and everyday company life."
+ },
+ {
+  "file": "italian-vocabulary-a2-b2.csv",
+  "name": "Italian Vocabulary A2–B2",
+  "level": "A2–B2",
+  "count": 387,
+  "description": "Everyday words with two example sentences each: body, home, money, time, feelings and common verbs."
+ }
+]

@@ -1,0 +1,51 @@
+﻿italiano,english,category,example
+il provino,test specimen,lab,Prepariamo i provini per la prova di domani.
+la prova di reazione al fuoco,reaction-to-fire test,lab,
+la resistenza al fuoco,fire resistance,lab,
+il rilascio di calore,heat release,lab,
+la propagazione della fiamma,flame spread,lab,
+l'opacità dei fumi,smoke opacity,lab,
+il gocciolamento,dripping (flaming droplets),lab,
+la taratura,calibration,lab,Lo strumento è in taratura fino a lunedì.
+il banco prova,test bench / test rig,lab,
+la cappa,fume hood,lab,
+il campione,sample,lab,
+la guaina,sheath / outer jacket,materials,
+l'isolante,insulation (material),materials,
+il conduttore,conductor,materials,
+la sezione,cross-section (of a conductor),materials,Che sezione ha questo cavo?
+la mescola,compound (rubber/plastic blend),materials,
+il rame,copper,materials,
+la bobina,reel / drum,materials,
+lo spessore,thickness,materials,
+il diametro esterno,outer diameter,materials,
+la scheda tecnica,technical datasheet,materials,
+il lotto,batch / lot,quality,
+la non conformità,nonconformity,quality,Apriamo una non conformità sul lotto.
+fuori specifica,out of spec,quality,
+la tolleranza,tolerance,quality,
+il collaudo,final inspection / acceptance test,quality,
+l'estrusione,extrusion,quality,
+il reparto,department / production area,quality,Passo un attimo in reparto.
+il turno,shift,quality,
+la commessa,customer order / job,quality,
+il fornitore,supplier,quality,
+i DPI,PPE (personal protective equipment),quality,
+la riunione,meeting,office,
+il verbale,minutes (of a meeting),office,
+in allegato,attached (to an email),office,In allegato trovi il report.
+ti giro la mail,I'll forward you the email,office,
+la scadenza,deadline,office,
+sollecitare,to chase up / send a reminder,office,Sollecito il fornitore per i certificati.
+fare il punto,to review where things stand,office,Facciamo il punto venerdì.
+prendere in carico,to take charge of (a task),office,Lo prendo in carico io.
+timbrare,to clock in / out,life,
+le ferie,annual leave / holidays,life,
+il permesso,time off (hours),life,Domani prendo due ore di permesso.
+la busta paga,payslip,life,
+la mensa,canteen,life,
+ci penso io,I'll take care of it,life,
+mi raccomando,please make sure / don't forget,life,"Mi raccomando, segna tutto sul foglio."
+un attimo,just a moment / quickly,life,
+boh,no idea / dunno,life,
+ci sentiamo,talk soon / we'll be in touch,life,
