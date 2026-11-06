@@ -10,8 +10,8 @@
   </defs>
 
   <!-- background -->
-  <rect width="512" height="512" rx="0" fill="#1f3a5c"/>
-  <circle cx="200" cy="330" r="190" fill="#24456c"/>
+  <rect width="512" height="512" rx="0" fill="#ebe3fc"/>
+  <circle cx="200" cy="330" r="190" fill="#dccff8"/>
 
   <g transform="translate(26,6)">
   <!-- flag pole -->
@@ -24,7 +24,7 @@
     <rect x="364" y="60" width="44" height="190" fill="#ffffff"/>
     <rect x="408" y="60" width="50" height="190" fill="#d7263d"/>
   </g>
-  <path d="M318 96 C352 82 380 112 414 98 C430 92 442 86 452 82 L452 208 C442 212 430 218 414 224 C380 238 352 208 318 222 Z" fill="none" stroke="#14273f" stroke-opacity=".25" stroke-width="3"/>
+  <path d="M318 96 C352 82 380 112 414 98 C430 92 442 86 452 82 L452 208 C442 212 430 218 414 224 C380 238 352 208 318 222 Z" fill="none" stroke="#2d2742" stroke-opacity=".3" stroke-width="3"/>
   </g>
 
   <!-- feet -->
