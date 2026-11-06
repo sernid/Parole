@@ -21,7 +21,7 @@
   --copper:#7d5fd0; --copper-soft:#eee8fb;
   --lilac:#c9b8f5; --pink:#f7b8d2; --sky:#a9d8f5; --mint:#a8e6cc; --lemon:#f8df85; --peach:#f9c6a8;
   --ok:#2f8a63; --ok-soft:#dcf5ea; --warn:#c24d7e; --warn-soft:#fde3ee; --hard:#8f6f08; --hard-soft:#fdf3cf; --sky-soft:#e3f3fd;
-  --shadow:0 6px 20px rgba(80,150,200,.14);
+  --shadow:0 6px 20px rgba(80,150,200,.14); --tile-ink:#2d2742;
   --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
   --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -31,13 +31,13 @@
   --copper:#8a6ee0; --copper-soft:#332a4d;
   --lilac:#8f7ad6; --pink:#d987ab; --sky:#78b3d8; --mint:#78c4a4; --lemon:#d7bb5c; --peach:#d9a07f;
   --ok:#7fd8b0; --ok-soft:#1f3a30; --warn:#f29bc0; --warn-soft:#45263a; --hard:#e8cc6e; --hard-soft:#3d3520; --sky-soft:#1f3343;
-  --shadow:0 6px 20px rgba(0,0,0,.3); color-scheme:dark}}
+  --shadow:0 6px 20px rgba(0,0,0,.3); --tile-ink:#16121f; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#141c26; --surface:#1e2834; --ink:#eaf1f8; --muted:#9fadbf; --line:#2f3d4f;
   --copper:#8a6ee0; --copper-soft:#332a4d;
   --lilac:#8f7ad6; --pink:#d987ab; --sky:#78b3d8; --mint:#78c4a4; --lemon:#d7bb5c; --peach:#d9a07f;
   --ok:#7fd8b0; --ok-soft:#1f3a30; --warn:#f29bc0; --warn-soft:#45263a; --hard:#e8cc6e; --hard-soft:#3d3520; --sky-soft:#1f3343;
-  --shadow:0 6px 20px rgba(0,0,0,.3); color-scheme:dark}
+  --shadow:0 6px 20px rgba(0,0,0,.3); --tile-ink:#16121f; color-scheme:dark}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
@@ -48,15 +48,28 @@ header > div{min-width:0}
 h1{font-family:var(--f-display);font-weight:800;font-size:clamp(1.7rem,6vw,2.3rem);line-height:1.05;margin:0;letter-spacing:-.01em}
 .today{font:600 .8rem var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;margin-top:4px}
 .today b{color:var(--copper);font-size:1rem}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
-.tab{font:600 .95rem var(--f-body);background:none;border:0;color:var(--muted);padding:10px 10px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
-.tabs{overflow-x:auto;scrollbar-width:none}
+.nav{display:flex;align-items:center;gap:12px}
+.nav-back{border:0;background:var(--surface);border-radius:999px;padding:9px 16px;font-weight:700;color:var(--copper);box-shadow:var(--shadow);cursor:pointer;flex:none}
+.nav h2{font:800 1.35rem var(--f-display);margin:0}
+.hello{font:700 1.15rem var(--f-display);margin:0 0 12px;color:var(--muted)}
+.home{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{border:0;border-radius:24px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:4px;cursor:pointer;color:var(--tile-ink);min-height:136px;box-shadow:var(--shadow);transition:transform .15s ease;min-width:0}
+.tile:active{transform:scale(.97)}
+.tile .t-label{font:700 1.15rem var(--f-display)}
+.tile .t-num{font:800 2.8rem var(--f-display);line-height:1;margin-top:auto;font-variant-numeric:tabular-nums}
+.tile .t-cap{font-size:.85rem;opacity:.75}
+.t-review{grid-column:1 / -1;min-height:180px;background:linear-gradient(135deg,var(--lilac),var(--sky))}
+.t-review .t-num{font-size:4rem}
+.t-sfida{background:var(--pink)}
+.t-list{background:var(--mint)}
+.t-tools{grid-column:1 / -1;min-height:0;flex-direction:row;align-items:center;justify-content:space-between;background:var(--lemon)}
+.t-arrow{font:800 1.8rem var(--f-display)}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}}
 .list-tools{display:flex;flex-direction:column;gap:8px}
 .list-tools input{width:100%;box-sizing:border-box}
 .item .num{font:600 .78rem var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;min-width:2.6em;text-align:right}
 #list .item{grid-template-columns:auto auto 1fr auto}
 #list .item:first-child{border-top:0}
-.tab[aria-selected="true"]{color:var(--copper);border-color:var(--copper)}
 button,select,input,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--copper);outline-offset:2px}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -168,14 +181,37 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
     <button class="fab" id="fab" aria-label="Add a word">+</button>
   </header>
 
-  <div class="tabs" role="tablist">
-    <button class="tab" id="tab-study" role="tab" aria-selected="true">Studia</button>
-    <button class="tab" id="tab-sfida" role="tab" aria-selected="false">Sfida</button>
-    <button class="tab" id="tab-lista" role="tab" aria-selected="false">Carte</button>
-    <button class="tab" id="tab-cards" role="tab" aria-selected="false">Strumenti</button>
+  <div class="nav" id="nav" hidden>
+    <button class="nav-back" id="nav-back" aria-label="Back to home">‹ Home</button>
+    <h2 id="nav-title"></h2>
   </div>
 
-  <section id="study" style="display:flex;flex-direction:column;gap:14px">
+  <section id="home" hidden>
+    <p class="hello" id="hello"></p>
+    <div class="home">
+      <button class="tile t-review" data-go="study">
+        <span class="t-label">Ripasso</span>
+        <span class="t-num" id="h-due">0</span>
+        <span class="t-cap" id="h-due-cap">da ripassare oggi</span>
+      </button>
+      <button class="tile t-sfida" data-go="sfida">
+        <span class="t-label">Sfida</span>
+        <span class="t-num" id="h-best">0</span>
+        <span class="t-cap">record · 60 secondi</span>
+      </button>
+      <button class="tile t-list" data-go="lista">
+        <span class="t-label">Le parole</span>
+        <span class="t-num" id="h-total">0</span>
+        <span class="t-cap">carte in totale</span>
+      </button>
+      <button class="tile t-tools" data-go="cards">
+        <span><span class="t-label">Strumenti</span><span class="t-cap" style="display:block">Mazzi, import, impostazioni, backup</span></span>
+        <span class="t-arrow" aria-hidden="true">›</span>
+      </button>
+    </div>
+  </section>
+
+  <section id="study" hidden style="display:flex;flex-direction:column;gap:14px">
     <div class="filters">
       <select id="f-cat" aria-label="Category"></select>
       <select id="f-dir" aria-label="Direction">
@@ -540,12 +576,26 @@ $("f-cat").onchange = () => { prefs.cat = $("f-cat").value; savePrefs(); extra =
 $("s-new").value = String(prefs.newPerDay || 20);
 $("s-new").onchange = () => { prefs.newPerDay = Number($("s-new").value); savePrefs(); renderToday(); };
 $("f-dir").onchange = () => { prefs.dir = $("f-dir").value; savePrefs(); flipped = false; renderStudy(); };
+const TITLES = {study:"Ripasso", sfida:"Sfida", lista:"Le parole", cards:"Strumenti"};
 function showTab(t){
   if(t !== "sfida" && sf.running) sfEnd();
-  ["study", "sfida", "lista", "cards"].forEach(k => { $(k).hidden = t !== k; $("tab-" + k).setAttribute("aria-selected", t === k); });
-  if(t === "lista") renderList(true); else if(t === "study") buildQueue(); else if(t === "sfida") sfShowStart();
+  ["home", "study", "sfida", "lista", "cards"].forEach(k => { $(k).hidden = t !== k; });
+  $("nav").hidden = t === "home"; $("today").hidden = t === "home"; $("nav-title").textContent = TITLES[t] || "";
+  window.scrollTo(0, 0);
+  if(t === "home") renderHome(); else if(t === "lista") renderList(true); else if(t === "study") buildQueue(); else if(t === "sfida") sfShowStart();
 }
-$("tab-study").onclick = () => showTab("study"); $("tab-sfida").onclick = () => showTab("sfida"); $("tab-lista").onclick = () => showTab("lista"); $("tab-cards").onclick = () => showTab("cards");
+function renderHome(){
+  renderToday();
+  const due = dueCount(cards);
+  $("h-due").textContent = due;
+  $("h-due-cap").textContent = due ? "da ripassare oggi" : "Fatto per oggi ✓";
+  $("h-best").textContent = sfStore.best;
+  $("h-total").textContent = cards.length;
+  const h = new Date().getHours();
+  $("hello").textContent = h < 5 ? "Buonanotte 🌙" : h < 13 ? "Buongiorno ☀️" : h < 18 ? "Buon pomeriggio" : "Buonasera";
+}
+document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => showTab(b.dataset.go));
+$("nav-back").onclick = () => showTab("home");
 
 /* ---------- Sfida: 60-second multiple-choice game ---------- */
 const SF_TIME = 60000, SF_PENALTY = 2000;
@@ -705,7 +755,7 @@ function saveDialog(){
   if(editing) Object.assign(editing, body); else cards.push(freshCard(body));
   save(); refreshAll(); return true;
 }
-function refreshAll(){ if(!$("lista").hidden) renderList(); if(current && !cards.includes(current)) current = null; if(!$("study").hidden && !current) buildQueue(); else renderStudy(); }
+function refreshAll(){ if(!$("home").hidden) renderHome(); if(!$("lista").hidden) renderList(); if(current && !cards.includes(current)) current = null; if(!$("study").hidden && !current) buildQueue(); else renderStudy(); }
 $("fab").onclick = () => openDialog(null);
 $("f-add").onsubmit = e => { e.preventDefault(); if(saveDialog()) $("dlg").close(); };
 $("a-more").onclick = () => { const it = $("a-it").value.trim(); if(saveDialog()){ openDialog(null); $("s-add").textContent = `Saved “${it}”.`; } };
@@ -869,8 +919,8 @@ $("b-reset").onclick = e => {
 
 /* ---------- start ---------- */
 save();
-buildQueue();
-document.addEventListener("visibilitychange", () => { if(!document.hidden && !$("study").hidden && !current) buildQueue(); });
+showTab("home");
+document.addEventListener("visibilitychange", () => { if(document.hidden) return; if(!$("home").hidden) renderHome(); if(!$("study").hidden && !current) buildQueue(); });
 if("serviceWorker" in navigator && location.protocol === "https:"){ navigator.serviceWorker.register("sw.js").catch(() => {}); }
 </script>
 </body>
