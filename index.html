@@ -99,7 +99,8 @@ select,input,textarea{background:var(--surface);border:1px solid var(--line);bor
 .stamp{position:absolute;top:16px;font:800 1.1rem var(--f-display);padding:4px 12px;border-radius:8px;border:3px solid;opacity:0;pointer-events:none;z-index:2;transform:rotate(-8deg)}
 .stamp.good{right:16px;color:var(--ok);border-color:var(--ok)}
 .stamp.again{left:16px;color:var(--warn);border-color:var(--warn);transform:rotate(8deg)}
-.grade{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grade{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.g-easy{background:var(--sky-soft);border-color:transparent;color:var(--ink)}
 .grade .btn{display:flex;flex-direction:column;align-items:center;padding:10px 6px;line-height:1.2}
 .grade small{font:400 .72rem var(--f-mono);color:var(--muted);margin-top:3px}
 .g-again{background:var(--warn-soft);border-color:transparent;color:var(--warn)}
@@ -310,7 +311,7 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
       <summary>Impostazioni</summary>
       <label class="small" for="s-new" style="display:flex;justify-content:space-between;align-items:center;gap:12px">New cards per day
         <select id="s-new"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100000">No limit</option></select></label>
-      <p class="small">Words you've already started don't count; they come back when they're due.</p>
+      <p class="small">Words you've already started don't count; they come back when they're due. New words pause automatically while 30 or more reviews are waiting.</p>
     </details>
 
     <details class="panel">
@@ -388,7 +389,7 @@ function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(cards)); $("s-global").textContent = ""; }
   catch(e){ $("s-global").textContent = "This phone isn't saving changes. Use Backup to keep a copy."; }
 }
-let prefs = {cat:"all", dir:"it", newPerDay:20};
+let prefs = {cat:"all", dir:"it", newPerDay:10};
 try{ Object.assign(prefs, JSON.parse(localStorage.getItem(PREFS) || "{}")); }catch(e){}
 const savePrefs = () => { try{ localStorage.setItem(PREFS, JSON.stringify(prefs)); }catch(e){} };
 
@@ -396,24 +397,30 @@ const savePrefs = () => { try{ localStorage.setItem(PREFS, JSON.stringify(prefs)
 // Again: back in a few minutes. Hard: a bit longer than last time. Good: interval grows by the card's ease.
 function nextIvl(c, g){
   if(g === "again") return 0;
-  if(c.reps === 0) return g === "hard" ? 1 : 2;
+  if(c.reps === 0) return g === "hard" ? 1 : g === "easy" ? 7 : 2;
   if(g === "hard") return Math.max(1, Math.round(c.ivl * 1.2));
+  if(g === "easy") return Math.max(c.ivl + 2, Math.round(c.ivl * c.ease * 1.3));
   return Math.max(c.ivl + 1, Math.round(c.ivl * c.ease));
 }
 function grade(c, g){
   const now = Date.now(), ivl = nextIvl(c, g);
   if(!c.seen) c.seen = now;
   if(g === "again"){ c.reps = 0; c.lapses++; c.ease = Math.max(1.3, c.ease - 0.2); c.ivl = 0; c.due = now; }
-  else { if(g === "hard") c.ease = Math.max(1.3, c.ease - 0.15); c.reps++; c.ivl = ivl; c.due = startOfDay(now) + ivl*DAY; }
+  else { if(g === "hard") c.ease = Math.max(1.3, c.ease - 0.15); if(g === "easy") c.ease = Math.min(3.2, c.ease + 0.15); c.reps++; c.ivl = ivl; c.due = startOfDay(now) + ivl*DAY; }
 }
 const fmtIvl = d => d === 0 ? "<1 min" : d < 30 ? d + "g" : d < 365 ? Math.round(d/30) + " mesi" : (d/365).toFixed(1) + " anni";
 const studyable = c => c.en.trim() !== "";
 const isDue = c => studyable(c) && c.due <= Date.now();
 const isNew = c => !c.seen && c.reps === 0 && c.lapses === 0;
 // how many never-seen cards may still start today (shared across categories)
+// New words pause while 30 or more reviews are waiting, so the pile can shrink first.
+const BACKLOG = 30;
+const reviewsDue = () => cards.filter(c => isDue(c) && !isNew(c)).length;
+const newPaused = () => reviewsDue() >= BACKLOG;
 function newLeft(){
+  if(newPaused()) return 0;
   const t = startOfDay(Date.now()), started = cards.filter(c => c.seen && c.seen >= t).length;
-  return Math.max(0, (Number(prefs.newPerDay) || 20) - started);
+  return Math.max(0, (Number(prefs.newPerDay) || 10) - started);
 }
 const dueCount = pool => pool.filter(c => isDue(c) && !isNew(c)).length + Math.min(newLeft(), pool.filter(c => isDue(c) && isNew(c)).length);
 
@@ -427,7 +434,7 @@ function mix(c, tag = "pick"){
   for(let i = 0; i < key.length; i++){ h ^= key.charCodeAt(i); h = Math.imul(h, 16777619); }
   return h >>> 0;
 }
-let queue = [], current = null, flipped = false, extra = false;
+let queue = [], current = null, flipped = false, extra = false, refilling = false;
 function buildQueue(){
   const pool = cards.filter(c => prefs.cat === "all" || c.category === prefs.cat);
   let list;
@@ -476,8 +483,8 @@ const SPEAK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 
 /* ---------- render: study ---------- */
 function renderToday(){
-  const due = dueCount(cards), todo = cards.filter(c => !studyable(c)).length;
-  $("today").innerHTML = `<b>${due}</b> da ripassare` + (todo ? ` · ${todo} senza traduzione` : "");
+  const r = reviewsDue(), n = dueCount(cards) - r, todo = cards.filter(c => !studyable(c)).length;
+  $("today").innerHTML = `<b>${r + n}</b> da ripassare` + (newPaused() ? " · nuove in pausa" : n ? ` · di cui ${n} nuove` : "") + (todo ? ` · ${todo} senza traduzione` : "");
 }
 function renderStudy(){
   renderToday();
@@ -487,6 +494,8 @@ function renderStudy(){
   if(!current){
     extra = false;
     const pool = cards.filter(c => studyable(c) && (prefs.cat === "all" || c.category === prefs.cat));
+    // reviews dropped below the backlog line mid-session: let today's new words in
+    if(!extra && !refilling && newLeft() > 0 && pool.some(c => isDue(c) && isNew(c))){ refilling = true; buildQueue(); refilling = false; return; }
     const waiting = pool.filter(isNew).length;
     const upcoming = pool.filter(c => !isNew(c)).sort((a,b) => a.due - b.due)[0];
     const when = upcoming ? Math.max(1, Math.round((startOfDay(upcoming.due) - startOfDay(Date.now())) / DAY)) : 0;
@@ -521,7 +530,8 @@ function renderActions(){
   act.innerHTML = `<div class="grade">
     <button class="btn g-again" data-g="again">Ancora<small>${fmtIvl(nextIvl(c,"again"))}</small></button>
     <button class="btn g-hard" data-g="hard">Difficile<small>${fmtIvl(nextIvl(c,"hard"))}</small></button>
-    <button class="btn g-good" data-g="good">Lo so<small>${fmtIvl(nextIvl(c,"good"))}</small></button></div>`;
+    <button class="btn g-good" data-g="good">Lo so<small>${fmtIvl(nextIvl(c,"good"))}</small></button>
+    <button class="btn g-easy" data-g="easy">Facile<small>${fmtIvl(nextIvl(c,"easy"))}</small></button></div>`;
   act.querySelectorAll("[data-g]").forEach(b => b.onclick = () => answer(b.dataset.g));
 }
 function flip(){
@@ -566,6 +576,7 @@ document.addEventListener("keydown", e => {
   if(flipped && e.key === "1") answer("again");
   if(flipped && e.key === "2") answer("hard");
   if(flipped && e.key === "3") answer("good");
+  if(flipped && e.key === "4") answer("easy");
 });
 
 /* ---------- filters and tabs ---------- */
@@ -573,7 +584,7 @@ const catOpts = all => (all ? '<option value="all">All categories</option>' : ""
 $("f-cat").innerHTML = catOpts(true); $("a-cat").innerHTML = catOpts(false);
 $("f-cat").value = CATS[prefs.cat] ? prefs.cat : "all"; $("f-dir").value = prefs.dir === "en" ? "en" : "it";
 $("f-cat").onchange = () => { prefs.cat = $("f-cat").value; savePrefs(); extra = false; buildQueue(); };
-$("s-new").value = String(prefs.newPerDay || 20);
+$("s-new").value = String(prefs.newPerDay || 10);
 $("s-new").onchange = () => { prefs.newPerDay = Number($("s-new").value); savePrefs(); renderToday(); };
 $("f-dir").onchange = () => { prefs.dir = $("f-dir").value; savePrefs(); flipped = false; renderStudy(); };
 const TITLES = {study:"Ripasso", sfida:"Sfida", lista:"Le parole", cards:"Strumenti"};
@@ -588,7 +599,8 @@ function renderHome(){
   renderToday();
   const due = dueCount(cards);
   $("h-due").textContent = due;
-  $("h-due-cap").textContent = due ? "da ripassare oggi" : "Fatto per oggi ✓";
+  const r = reviewsDue();
+  $("h-due-cap").textContent = !due ? "Fatto per oggi ✓" : newPaused() ? `${r} ripassi · new words paused until you catch up` : `${r} ripassi · ${due - r} nuove`;
   $("h-best").textContent = sfStore.best;
   $("h-total").textContent = cards.length;
   const h = new Date().getHours();
