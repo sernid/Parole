@@ -74,6 +74,14 @@ h1{font-family:var(--f-display);font-weight:800;font-size:clamp(1.7rem,6vw,2.3re
 .song-head h3{font:800 1.5rem var(--f-display);margin:0;overflow-wrap:anywhere}
 a.btn{text-decoration:none;color:inherit;display:inline-block}
 #song-list{display:flex;flex-direction:column;gap:10px}
+.lyr-panel textarea{min-height:220px;font-family:var(--f-body);font-size:16px}
+.lyr-h{font:800 1.15rem var(--f-display);margin:0}
+.lyrics{font-size:1.05rem;line-height:1.9;overflow-wrap:anywhere}
+.lyrics .ln{min-height:1em}
+.lyrics .ln.gap{height:.8em}
+.lw{cursor:pointer;border-radius:6px;padding:1px 1px;-webkit-tap-highlight-color:transparent}
+.lw:hover,.lw:focus-visible{background:var(--copper-soft)}
+.lw.saved,mark.lyr-saved{background:var(--ok-soft);color:var(--ok);font-weight:700;padding:0 3px;border-radius:6px}
 .empty-songs{background:var(--surface);border:1px dashed var(--line);border-radius:20px;padding:22px;text-align:center;color:var(--muted)}
 .t-arrow{font:800 1.8rem var(--f-display)}
 @media (prefers-reduced-motion:reduce){.tile{transition:none}}
@@ -319,6 +327,24 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
       <div class="row">
         <button class="btn primary" id="sd-add">+ Aggiungi parola</button>
         <button class="btn" id="sd-study">Studia queste parole</button>
+      </div>
+      <div class="panel lyr-panel">
+        <div class="row" style="justify-content:space-between">
+          <h3 class="lyr-h">Testo</h3>
+          <button class="btn" id="sd-lyr-edit" hidden>Modifica testo</button>
+        </div>
+        <div id="sd-lyr-empty">
+          <p class="small">Paste the lyrics here, then tap any word you don't know to save it. The lyrics stay on this phone only.</p>
+          <div class="row"><button class="btn primary" id="sd-lyr-add">Incolla il testo</button><a class="btn" id="sd-lyr-find" target="_blank" rel="noopener noreferrer">Cerca il testo ↗</a></div>
+        </div>
+        <div id="sd-lyr-form" hidden>
+          <textarea id="sd-lyr-in" aria-label="Lyrics" placeholder="Paste the lyrics here"></textarea>
+          <div class="row"><button class="btn primary" id="sd-lyr-save">Save lyrics</button><button class="btn" id="sd-lyr-cancel">Cancel</button></div>
+        </div>
+        <div id="sd-lyr-view" hidden>
+          <p class="small">Tap a word to save it. <mark class="lyr-saved">Highlighted</mark> words are already in your cards.</p>
+          <div class="lyrics" id="sd-lyrics"></div>
+        </div>
       </div>
       <div class="panel" style="padding-block:4px 8px"><div id="sd-words"></div></div>
     </div>
@@ -832,7 +858,7 @@ let editing = null;
 function openDialog(c, opts){
   editing = c || null;
   $("dlg-title").textContent = c ? "Modifica" : "Nuova parola";
-  $("a-it").value = c ? c.it : ""; $("a-en").value = c ? c.en : ""; $("a-ex").value = c ? c.example : "";
+  $("a-it").value = c ? c.it : (opts && opts.it) || ""; $("a-en").value = c ? c.en : ""; $("a-ex").value = c ? c.example : (opts && opts.example) || "";
   $("a-cat").value = c ? c.category : opts && opts.song ? "songs" : (CATS[prefs.cat] ? prefs.cat : "life");
   $("a-song").innerHTML = '<option value="">— no song —</option>' + songs.map(x => `<option value="${x.id}">${esc(x.title)}${x.artist ? " · " + esc(x.artist) : ""}</option>`).join("");
   $("a-song").value = c ? (c.song || "") : (opts && opts.song) || "";
@@ -906,6 +932,7 @@ function openSong(id){
   $("sd-link").href = listenLink(x);
   $("sd-link").textContent = safeLink(x.link) ? "▶ Ascolta" : "▶ Cerca su YouTube";
   const words = cards.filter(c => c.song === id);
+  renderLyrics(x, words);
   $("sd-study").disabled = !words.some(studyable);
   $("sd-words").innerHTML = words.length ? words.map((c, i) => `<div class="item">
       <span class="num">${i + 1}</span>
@@ -915,6 +942,43 @@ function openSong(id){
     : '<p class="small" style="padding:12px 0">No words yet. Tap <b>+ Aggiungi parola</b> each time you hear something new.</p>';
   window.scrollTo(0, 0);
 }
+// Lyrics: pasted by you, kept on this phone only. Every word can be tapped to save it.
+const ARTICLES = /^(il|lo|la|i|gli|le|l|un|uno|una|un|del|della|dello|dei|degli|delle|si|mi|ti|ci|vi)$/i;
+function renderLyrics(x, words){
+  const has = !!(x.lyrics && x.lyrics.trim());
+  $("sd-lyr-empty").hidden = has; $("sd-lyr-form").hidden = true; $("sd-lyr-view").hidden = !has; $("sd-lyr-edit").hidden = !has;
+  $("sd-lyr-find").href = "https://www.google.com/search?q=" + encodeURIComponent((x.title + " " + x.artist + " testo").trim());
+  if(!has){ $("sd-lyrics").innerHTML = ""; return; }
+  // every word that appears in a saved card of this song counts as saved (articles ignored)
+  const saved = new Set();
+  words.forEach(c => (c.it.toLowerCase().match(/\p{L}+/gu) || []).forEach(w => { if(!ARTICLES.test(w)) saved.add(w); }));
+  $("sd-lyrics").innerHTML = x.lyrics.split(/\r?\n/).map((line, li) => {
+    if(!line.trim()) return '<div class="ln gap"></div>';
+    const html = line.split(/(\p{L}+)/u).map(part => /^\p{L}+$/u.test(part)
+      ? `<span class="lw${saved.has(part.toLowerCase()) ? " saved" : ""}" data-li="${li}" tabindex="0" role="button">${esc(part)}</span>` : esc(part)).join("");
+    return `<div class="ln">${html}</div>`;
+  }).join("");
+}
+function pickLyricWord(el){
+  const x = songs.find(s => s.id === openSongId); if(!x) return;
+  const line = x.lyrics.split(/\r?\n/)[Number(el.dataset.li)] || "";
+  openDialog(null, {song:x.id, it:el.textContent.toLowerCase(), example:line.trim()});
+}
+$("sd-lyrics").onclick = e => { const w = e.target.closest(".lw"); if(w) pickLyricWord(w); };
+$("sd-lyrics").onkeydown = e => { const w = e.target.closest(".lw"); if(w && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); pickLyricWord(w); } };
+function editLyrics(){
+  const x = songs.find(s => s.id === openSongId); if(!x) return;
+  $("sd-lyr-in").value = x.lyrics || "";
+  $("sd-lyr-empty").hidden = true; $("sd-lyr-view").hidden = true; $("sd-lyr-edit").hidden = true; $("sd-lyr-form").hidden = false;
+  $("sd-lyr-in").focus();
+}
+$("sd-lyr-add").onclick = editLyrics; $("sd-lyr-edit").onclick = editLyrics;
+$("sd-lyr-cancel").onclick = () => openSong(openSongId);
+$("sd-lyr-save").onclick = () => {
+  const x = songs.find(s => s.id === openSongId); if(!x) return;
+  x.lyrics = $("sd-lyr-in").value.replace(/\s+$/, "");
+  saveSongs(); openSong(x.id);
+};
 $("sd-words").onclick = e => { const id = e.target.dataset.edit; if(id) openDialog(cards.find(c => c.id === id)); };
 $("sd-back").onclick = () => { openSongId = ""; renderSongs(); };
 $("sd-add").onclick = () => openDialog(null, {song:openSongId});
