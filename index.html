@@ -82,6 +82,11 @@ a.btn{text-decoration:none;color:inherit;display:inline-block}
 .lw{cursor:pointer;border-radius:6px;padding:1px 1px;-webkit-tap-highlight-color:transparent}
 .lw:hover,.lw:focus-visible{background:var(--copper-soft)}
 .lw.saved,mark.lyr-saved{background:var(--ok-soft);color:var(--ok);font-weight:700;padding:0 3px;border-radius:6px}
+.sugg{display:flex;flex-direction:column;gap:6px;margin-top:-4px}
+.sugg-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.85rem;color:var(--muted)}
+.chip{border:1px solid transparent;background:var(--sky-soft);color:var(--ink);border-radius:999px;padding:5px 12px;font-weight:600;cursor:pointer;font-size:.9rem}
+.chip:hover{border-color:var(--sky)}
+.sugg-g{font-size:.85rem;color:var(--copper);font-weight:600;text-decoration:none;align-self:flex-start}
 .empty-songs{background:var(--surface);border:1px dashed var(--line);border-radius:20px;padding:22px;text-align:center;color:var(--muted)}
 .t-arrow{font:800 1.8rem var(--f-display)}
 @media (prefers-reduced-motion:reduce){.tile{transition:none}}
@@ -402,6 +407,10 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
     <h2 id="dlg-title">Nuova parola</h2>
     <label>Italiano <input id="a-it" autocomplete="off" autocapitalize="off" required placeholder="What you heard"></label>
     <label>English <input id="a-en" autocomplete="off" placeholder="Leave empty and fill in later"></label>
+    <div class="sugg" id="a-sugg" hidden>
+      <div class="sugg-row" id="a-sugg-list"></div>
+      <a class="sugg-g" id="a-gt" target="_blank" rel="noopener noreferrer">Google Traduttore ↗</a>
+    </div>
     <label>Example sentence <input id="a-ex" autocomplete="off" placeholder="Optional"></label>
     <label>Category <select id="a-cat"></select></label>
     <label id="a-song-wrap" hidden>Canzone <select id="a-song"></select></label>
@@ -866,6 +875,7 @@ function openDialog(c, opts){
   $("a-del").hidden = !c; $("a-del").textContent = "Delete"; delete $("a-del").dataset.confirm;
   $("a-more").hidden = !!c; $("s-add").textContent = "";
   $("dlg").showModal(); setTimeout(() => $("a-it").focus(), 50);
+  suggest(true);
 }
 function saveDialog(){
   const it = $("a-it").value.trim();
@@ -877,6 +887,48 @@ function saveDialog(){
 }
 function refreshAll(){ if(!$("home").hidden) renderHome(); if(!$("songs").hidden){ if(openSongId) openSong(openSongId); else renderSongs(); } if(!$("lista").hidden) renderList(); if(current && !cards.includes(current)) current = null; if(!$("study").hidden && !current) buildQueue(); else renderStudy(); }
 $("fab").onclick = () => openDialog(null, !$("songs").hidden && openSongId ? {song:openSongId} : null);
+/* meaning suggestions: MyMemory (free, no key) + a link to Google Translate */
+const MEANINGS = new Map();
+let suggTimer = 0, suggSeq = 0;
+async function fetchMeanings(word){
+  if(MEANINGS.has(word)) return MEANINGS.get(word);
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 6000);
+  try{
+    const r = await fetch("https://api.mymemory.translated.net/get?langpair=it|en&q=" + encodeURIComponent(word), {signal:ctl.signal});
+    const d = await r.json();
+    const out = [], seen = new Set();
+    const add = v => { v = String(v || "").trim().replace(/[.!?]+$/, ""); const k = v.toLowerCase();
+      if(!v || seen.has(k) || /MYMEMORY|QUERY LENGTH|INVALID/i.test(v) || k === word.toLowerCase() || v.length > 60) return; seen.add(k); out.push(v.charAt(0) === v.charAt(0).toUpperCase() && v.slice(1) === v.slice(1).toLowerCase() ? v.toLowerCase() : v); };
+    if(d && d.responseStatus == 200) add(d.responseData && d.responseData.translatedText);
+    ((d && d.matches) || []).filter(m => Number(m.quality) >= 50 || m.quality === "").forEach(m => add(m.translation));
+    const res = {ok:true, list:out.slice(0, 4), quota:/MYMEMORY WARNING/i.test(JSON.stringify(d && d.responseData || ""))};
+    MEANINGS.set(word, res); return res;
+  }catch(e){ return {ok:false, list:[]}; }
+  finally{ clearTimeout(t); }
+}
+function suggest(now){
+  clearTimeout(suggTimer);
+  const word = $("a-it").value.trim();
+  $("a-sugg").hidden = !word;
+  if(!word) return;
+  $("a-gt").href = "https://translate.google.com/?sl=it&tl=en&op=translate&text=" + encodeURIComponent(word);
+  if($("a-en").value.trim()){ $("a-sugg-list").textContent = ""; return; }   // meaning already written: just keep the Google link
+  const seq = ++suggSeq;
+  suggTimer = setTimeout(async () => {
+    $("a-sugg-list").textContent = "Cerco il significato…";
+    const res = await fetchMeanings(word);
+    if(seq !== suggSeq) return;   // the word changed meanwhile
+    const box = $("a-sugg-list"); box.textContent = "";
+    if(!res.ok){ box.textContent = "No suggestion right now (offline?). Try Google Traduttore."; return; }
+    if(res.quota){ box.textContent = "Today's free suggestions are used up. Try Google Traduttore."; return; }
+    if(!res.list.length){ box.textContent = "No suggestion found. Try Google Traduttore."; return; }
+    const lab = document.createElement("span"); lab.textContent = "Forse:"; box.appendChild(lab);
+    res.list.forEach(v => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = v;
+      b.onclick = () => { $("a-en").value = v; $("a-sugg-list").textContent = ""; $("a-en").focus(); }; box.appendChild(b); });
+  }, now ? 0 : 650);
+}
+$("a-it").addEventListener("input", () => suggest(false));
+$("a-en").addEventListener("input", () => { if($("a-en").value.trim()) $("a-sugg-list").textContent = ""; });
 function syncSongField(){
   const isSong = $("a-cat").value === "songs";
   $("a-song-wrap").hidden = !isSong;
